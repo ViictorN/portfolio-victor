@@ -9,7 +9,7 @@ import {
   Download, Github, Linkedin, ChevronDown, Activity, 
   Zap, Database, Globe, Lock, Network, ShieldCheck, 
   Gauge, Menu, X, ArrowUpRight, HardDrive, Clock, 
-  ArrowUp, Cable, MonitorPlay
+  ArrowUp, Cable, MonitorPlay, MapPin // <--- ADICIONADO AQUI
 } from 'lucide-react';
 
 // --- 1. CURSOR LIQUID GLASS (SETA SEM DELAY) ---
@@ -21,10 +21,8 @@ function LiquidArrowCursor() {
 
   useEffect(() => {
     const moveCursor = (e: MouseEvent) => {
-      // Atualização direta sem Spring (Sem Delay)
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
-      
       const target = e.target as HTMLElement;
       const isInteractive = target.closest('button') || target.closest('a') || target.closest('input') || target.closest('.interactive');
       setIsHovering(!!isInteractive);
@@ -48,23 +46,12 @@ function LiquidArrowCursor() {
       className="fixed top-0 left-0 pointer-events-none z-[9999] hidden md:block" 
       style={{ x: cursorX, y: cursorY }}
     >
-      {/* Seta SVG Customizada com Efeito Vidro */}
       <motion.div 
-        animate={{ 
-          scale: isClicking ? 0.9 : isHovering ? 1.1 : 1,
-        }}
+        animate={{ scale: isClicking ? 0.9 : isHovering ? 1.1 : 1 }}
         className="relative -mt-1 -ml-1"
       >
-        {/* Corpo da Seta (Vidro) */}
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-xl">
-           <path 
-             d="M6 2L26 18L16 20L14 28L6 2Z" 
-             fill="rgba(255, 255, 255, 0.1)" 
-             stroke="rgba(255, 255, 255, 0.5)" 
-             strokeWidth="1"
-             style={{ backdropFilter: "blur(4px)" }} 
-           />
-           {/* Brilho interno (Highlight) */}
+           <path d="M6 2L26 18L16 20L14 28L6 2Z" fill="rgba(255, 255, 255, 0.1)" stroke="rgba(255, 255, 255, 0.5)" strokeWidth="1" style={{ backdropFilter: "blur(4px)" }} />
            <path d="M7 5L20 16L7 5Z" fill="rgba(255, 255, 255, 0.8)" opacity="0.5" />
         </svg>
       </motion.div>
@@ -74,7 +61,6 @@ function LiquidArrowCursor() {
 
 // --- 2. COMPONENTES DE UI ---
 
-// Botão Neon Refinado
 const NeonButton = ({ children, primary = false, icon: Icon, onClick }: any) => (
   <motion.button
     whileHover={{ scale: 1.02, textShadow: "0 0 8px rgb(255,255,255)" }}
@@ -93,7 +79,6 @@ const NeonButton = ({ children, primary = false, icon: Icon, onClick }: any) => 
   </motion.button>
 );
 
-// Card Glass Refinado
 function GlassCard({ children, className = "", delay = 0 }: { children: React.ReactNode, className?: string, delay?: number }) {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
