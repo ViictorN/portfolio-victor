@@ -154,10 +154,10 @@ export default function Portfolio() {
                     <span className="text-white">:~#</span>
                     <span className="text-yellow-300">init protocol</span>
                   </div>
-                  <div className="text-slate-400 pl-4">> Establishing secure connection...</div>
-                  <div className="text-slate-400 pl-4">> Loading telecom modules... [OK]</div>
-                  <div className="text-slate-400 pl-4">> Loading dev skills... [OK]</div>
-                  <div className="text-emerald-400 pl-4">> System Ready.</div>
+                  <div className="text-slate-400 pl-4">&gt; Establishing secure connection...</div>
+                  <div className="text-slate-400 pl-4">&gt; Loading telecom modules... [OK]</div>
+                  <div className="text-slate-400 pl-4">&gt; Loading dev skills... [OK]</div>
+                  <div className="text-emerald-400 pl-4">&gt; System Ready.</div>
                   <div className="w-3 h-5 bg-emerald-500 animate-pulse mt-2" />
                 </div>
               </GlassCard>
