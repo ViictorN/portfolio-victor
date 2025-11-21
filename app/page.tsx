@@ -9,10 +9,156 @@ import {
   Download, Github, Linkedin, ChevronDown, Activity, 
   Zap, Database, Globe, Lock, Network, ShieldCheck, 
   Gauge, Menu, X, ArrowUpRight, HardDrive, Clock, 
-  ArrowUp, Cable, MonitorPlay, MapPin // <--- ADICIONADO AQUI
+  ArrowUp, Cable, MonitorPlay, MapPin
 } from 'lucide-react';
 
-// --- 1. CURSOR LIQUID GLASS (SETA SEM DELAY) ---
+// --- 1. EFEITO: NETWORK BACKGROUND (CANVAS) ---
+const NetworkBackground = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let w = (canvas.width = window.innerWidth);
+    let h = (canvas.height = window.innerHeight);
+    let particles: Particle[] = [];
+    
+    const properties = {
+      bgColor: 'rgba(5, 5, 5, 0)', // Transparente para ver o fundo preto
+      particleColor: 'rgba(16, 185, 129, 0.5)', // Verde Emerald
+      particleRadius: 1.5,
+      particleCount: 60,
+      lineLength: 150,
+      particleSpeed: 0.3,
+    };
+
+    class Particle {
+      x: number; y: number; velocityX: number; velocityY: number;
+      constructor() {
+        this.x = Math.random() * w;
+        this.y = Math.random() * h;
+        this.velocityX = Math.random() * (properties.particleSpeed * 2) - properties.particleSpeed;
+        this.velocityY = Math.random() * (properties.particleSpeed * 2) - properties.particleSpeed;
+      }
+      position() {
+        this.x + this.velocityX > w && this.velocityX > 0 || this.x + this.velocityX < 0 && this.velocityX < 0 ? this.velocityX *= -1 : this.velocityX;
+        this.y + this.velocityY > h && this.velocityY > 0 || this.y + this.velocityY < 0 && this.velocityY < 0 ? this.velocityY *= -1 : this.velocityY;
+        this.x += this.velocityX;
+        this.y += this.velocityY;
+      }
+      reDraw() {
+        if (!ctx) return;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, properties.particleRadius, 0, Math.PI * 2);
+        ctx.fillStyle = properties.particleColor;
+        ctx.fill();
+      }
+    }
+
+    const reDrawBackground = () => {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, w, h);
+    };
+
+    const drawLines = () => {
+      if (!ctx) return;
+      let x1, y1, x2, y2, length, opacity;
+      for (let i in particles) {
+        for (let j in particles) {
+          x1 = particles[i].x; y1 = particles[i].y;
+          x2 = particles[j].x; y2 = particles[j].y;
+          length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+          if (length < properties.lineLength) {
+            opacity = 1 - length / properties.lineLength;
+            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = `rgba(16, 185, 129, ${opacity})`;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+          }
+        }
+      }
+    };
+
+    const reDrawParticles = () => {
+      for (let i in particles) {
+        particles[i].position();
+        particles[i].reDraw();
+      }
+    };
+
+    const loop = () => {
+      reDrawBackground();
+      reDrawParticles();
+      drawLines();
+      requestAnimationFrame(loop);
+    };
+
+    const init = () => {
+      particles = [];
+      for (let i = 0; i < properties.particleCount; i++) {
+        particles.push(new Particle());
+      }
+      loop();
+    };
+
+    init();
+
+    const handleResize = () => {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return <canvas ref={canvasRef} className="fixed inset-0 z-0 opacity-30 pointer-events-none" />;
+};
+
+// --- 2. EFEITO: HYPERTEXT (Decodificador) ---
+const HyperText = ({ text, className = "" }: { text: string, className?: string }) => {
+  const [displayText, setDisplayText] = useState(text);
+  const iterations = useRef(0);
+
+  useEffect(() => {
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
+    const interval = setInterval(() => {
+      setDisplayText(text
+        .split("")
+        .map((letter, index) => {
+          if (index < iterations.current) return text[index];
+          return letters[Math.floor(Math.random() * 26)];
+        })
+        .join("")
+      );
+      if (iterations.current >= text.length) clearInterval(interval);
+      iterations.current += 1 / 3;
+    }, 30);
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return <span className={`font-mono ${className}`}>{displayText}</span>;
+};
+
+// --- 3. EFEITO: BORDER BEAM (Feixe de Luz) ---
+const BorderBeam = ({ duration = 4, size = 200 }: { duration?: number, size?: number }) => (
+  <div 
+    style={{ "--duration": duration } as React.CSSProperties}
+    className="pointer-events-none absolute inset-0 rounded-2xl border border-transparent [mask-clip:padding-box,border-box] [mask-composite:intersect] [mask-image:linear-gradient(transparent,transparent),linear-gradient(#000,#000)]"
+  >
+    <div 
+      className="absolute aspect-square inset-0 animate-border-beam bg-gradient-to-l from-transparent via-emerald-500 to-transparent"
+      style={{ width: size, offsetPath: "rect(0 auto auto 0 round 16px)" }}
+    />
+  </div>
+);
+
+// --- 4. UX: CURSOR LIQUID GLASS (ZERO DELAY) ---
 function LiquidArrowCursor() {
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
@@ -33,7 +179,6 @@ function LiquidArrowCursor() {
     window.addEventListener('mousemove', moveCursor);
     window.addEventListener('mousedown', mouseDown);
     window.addEventListener('mouseup', mouseUp);
-    
     return () => {
       window.removeEventListener('mousemove', moveCursor);
       window.removeEventListener('mousedown', mouseDown);
@@ -42,35 +187,28 @@ function LiquidArrowCursor() {
   }, []);
 
   return (
-    <motion.div 
-      className="fixed top-0 left-0 pointer-events-none z-[9999] hidden md:block" 
-      style={{ x: cursorX, y: cursorY }}
-    >
-      <motion.div 
-        animate={{ scale: isClicking ? 0.9 : isHovering ? 1.1 : 1 }}
-        className="relative -mt-1 -ml-1"
-      >
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-xl">
-           <path d="M6 2L26 18L16 20L14 28L6 2Z" fill="rgba(255, 255, 255, 0.1)" stroke="rgba(255, 255, 255, 0.5)" strokeWidth="1" style={{ backdropFilter: "blur(4px)" }} />
-           <path d="M7 5L20 16L7 5Z" fill="rgba(255, 255, 255, 0.8)" opacity="0.5" />
+    <motion.div className="fixed top-0 left-0 pointer-events-none z-[9999] hidden md:block" style={{ x: cursorX, y: cursorY }}>
+      <motion.div animate={{ scale: isClicking ? 0.9 : isHovering ? 1.2 : 1 }} className="relative -mt-1 -ml-1">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+           <path d="M6 2L26 18L16 20L14 28L6 2Z" fill="rgba(0, 0, 0, 0.3)" stroke="rgba(16, 185, 129, 0.8)" strokeWidth="1.5" style={{ backdropFilter: "blur(6px)" }} />
         </svg>
       </motion.div>
     </motion.div>
   );
 }
 
-// --- 2. COMPONENTES DE UI ---
+// --- COMPONENTES DE UI REFINADOS ---
 
 const NeonButton = ({ children, primary = false, icon: Icon, onClick }: any) => (
   <motion.button
-    whileHover={{ scale: 1.02, textShadow: "0 0 8px rgb(255,255,255)" }}
+    whileHover={{ scale: 1.02, textShadow: "0 0 10px rgba(16,185,129,0.8)" }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
     className={`
       relative px-8 py-4 rounded-full font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all duration-300 interactive
       ${primary 
-        ? "bg-emerald-500 text-black shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] hover:bg-emerald-400" 
-        : "bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:border-white/30 shadow-lg backdrop-blur-md"
+        ? "bg-emerald-500 text-black shadow-[0_0_25px_rgba(16,185,129,0.5)] hover:bg-emerald-400 border border-emerald-400" 
+        : "bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:border-emerald-500/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]"
       }
     `}
   >
@@ -79,7 +217,7 @@ const NeonButton = ({ children, primary = false, icon: Icon, onClick }: any) => 
   </motion.button>
 );
 
-function GlassCard({ children, className = "", delay = 0 }: { children: React.ReactNode, className?: string, delay?: number }) {
+function GlassCard({ children, className = "", delay = 0, withBeam = false }: { children: React.ReactNode, className?: string, delay?: number, withBeam?: boolean }) {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const ref = useRef(null);
@@ -98,10 +236,11 @@ function GlassCard({ children, className = "", delay = 0 }: { children: React.Re
       }}
       className={`group relative overflow-hidden rounded-2xl glass-panel ${className}`}
     >
+      {withBeam && <BorderBeam />}
       <motion.div
         className="pointer-events-none absolute -inset-px opacity-0 transition duration-300 group-hover:opacity-100"
         style={{
-          background: useMotionTemplate`radial-gradient(600px circle at ${mouseX}px ${mouseY}px, rgba(255, 255, 255, 0.06), transparent 80%)`,
+          background: useMotionTemplate`radial-gradient(600px circle at ${mouseX}px ${mouseY}px, rgba(16, 185, 129, 0.05), transparent 80%)`,
         }}
       />
       <div className="relative z-10 h-full p-6 flex flex-col">{children}</div>
@@ -112,16 +251,15 @@ function GlassCard({ children, className = "", delay = 0 }: { children: React.Re
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 50);
+    const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? 'py-4 bg-black/60 backdrop-blur-xl border-b border-white/5' : 'py-6 bg-transparent'}`}>
+      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${scrolled ? 'py-3 bg-black/80 backdrop-blur-xl border-b border-white/5 shadow-lg' : 'py-6 bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           <div className="flex items-center gap-2 interactive cursor-pointer" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]"/>
@@ -129,11 +267,11 @@ function Navbar() {
           </div>
           <div className="hidden md:flex gap-8 text-xs font-bold text-slate-400 uppercase tracking-widest">
             {['Habilidades', 'Projetos', 'Laboratório'].map((item) => (
-              <a key={item} href={`#${item.toLowerCase().replace('á','a').replace('ó','o')}`} className="hover:text-emerald-400 transition-colors pb-1 interactive">{item}</a>
+              <a key={item} href={`#${item.toLowerCase().replace('á','a').replace('ó','o')}`} className="hover:text-emerald-400 transition-colors pb-1 interactive hover:shadow-[0_2px_0px_rgba(16,185,129,1)]">{item}</a>
             ))}
           </div>
           <div className="hidden md:block">
-             <a href="mailto:victor140730@gmail.com" className="px-5 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-white transition-all interactive">FALE COMIGO</a>
+             <a href="mailto:victor140730@gmail.com" className="px-5 py-2 rounded-full bg-white/5 hover:bg-emerald-500/20 border border-white/10 hover:border-emerald-500/50 text-xs font-bold text-white transition-all interactive">FALE COMIGO</a>
           </div>
           <button onClick={() => setIsOpen(true)} className="md:hidden text-white interactive"><Menu size={24} /></button>
         </div>
@@ -159,14 +297,14 @@ const GlassInput = ({ label, value, onChange, suffix }: any) => (
   <div className="mb-3 w-full interactive">
     <label className="text-[10px] uppercase tracking-wider text-slate-500 mb-1 block ml-1 font-bold">{label}</label>
     <div className="relative group">
-      <input type="text" inputMode="numeric" value={value} onChange={(e) => onChange(e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-emerald-500/50 focus:shadow-[0_0_15px_rgba(16,185,129,0.1)] transition-all font-mono group-hover:bg-black/30"/>
+      <input type="text" inputMode="numeric" value={value} onChange={(e) => onChange(e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-emerald-500/50 focus:bg-emerald-900/10 transition-all font-mono group-hover:border-white/20"/>
       {suffix && <span className="absolute right-3 top-3 text-xs text-slate-500 font-bold">{suffix}</span>}
     </div>
   </div>
 );
 
-const FiberCalc = () => { const [d, setD] = useState(10); const [s, setS] = useState(2); return (<div className="h-full flex flex-col"><h4 className="font-bold text-emerald-400 text-sm mb-4 flex items-center gap-2"><Activity size={14}/> LOSS BUDGET</h4><GlassInput label="Distância (Km)" value={d} onChange={setD} /><GlassInput label="Emendas (Qtd)" value={s} onChange={setS} /><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Total</span><span className="font-mono text-lg text-white font-bold">{((d*0.35)+(s*0.1)+1).toFixed(2)} dB</span></div></div>); };
-const DownloadCalc = () => { const [s, setS] = useState(50); const [sp, setSp] = useState(300); const t = (s*8000)/sp; return (<div className="h-full flex flex-col"><h4 className="font-bold text-cyan-400 text-sm mb-4 flex items-center gap-2"><Download size={14}/> TEMPO DOWNLOAD</h4><GlassInput label="Arquivo (GB)" value={s} onChange={setS} /><GlassInput label="Velocidade (Mbps)" value={sp} onChange={setSp} /><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Estimativa</span><span className="font-mono text-lg text-white font-bold">{t<60?t.toFixed(0)+'s':(t/60).toFixed(1)+'m'}</span></div></div>); };
+const FiberCalc = () => { const [d, setD] = useState(10); const [s, setS] = useState(2); return (<div className="h-full flex flex-col"><h4 className="font-bold text-emerald-400 text-sm mb-4 flex items-center gap-2"><Activity size={14}/> LOSS BUDGET</h4><GlassInput label="Distância (Km)" value={d} onChange={setD} /><GlassInput label="Emendas (Qtd)" value={s} onChange={setS} /><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Total Estimado</span><span className="font-mono text-lg text-white font-bold">{((d*0.35)+(s*0.1)+1).toFixed(2)} dB</span></div></div>); };
+const DownloadCalc = () => { const [s, setS] = useState(50); const [sp, setSp] = useState(300); const t = (s*8000)/sp; return (<div className="h-full flex flex-col"><h4 className="font-bold text-cyan-400 text-sm mb-4 flex items-center gap-2"><Download size={14}/> TEMPO DOWNLOAD</h4><GlassInput label="Arquivo (GB)" value={s} onChange={setS} /><GlassInput label="Velocidade (Mbps)" value={sp} onChange={setSp} /><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Tempo</span><span className="font-mono text-lg text-white font-bold">{t<60?t.toFixed(0)+'s':(t/60).toFixed(1)+'m'}</span></div></div>); };
 const SubnetCalc = () => { const [c, setC] = useState(24); return (<div className="h-full flex flex-col"><h4 className="font-bold text-orange-400 text-sm mb-4 flex items-center gap-2"><Network size={14}/> IPV4 SUBNET</h4><div className="mb-4 interactive"><label className="text-xs text-slate-500 block mb-2 font-bold">PREFIXO: /{c}</label><input type="range" min="16" max="30" value={c} onChange={(e)=>setC(Number(e.target.value))} className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-orange-500 hover:accent-orange-400"/></div><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Hosts Úteis</span><span className="font-mono text-lg text-white font-bold">{(Math.pow(2, 32-c)-2).toLocaleString()}</span></div></div>); };
 const RaidCalc = () => { const [d, setD] = useState(4); const [sz, setSz] = useState(2); return (<div className="h-full flex flex-col"><h4 className="font-bold text-red-400 text-sm mb-4 flex items-center gap-2"><HardDrive size={14}/> RAID 5 CALC</h4><GlassInput label="Discos" value={d} onChange={setD} /><GlassInput label="Tamanho (TB)" value={sz} onChange={setSz} /><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Capacidade</span><span className="font-mono text-lg text-white font-bold">{((d-1)*sz)} TB</span></div></div>); };
 const UptimeCalc = () => { const [sla, setSla] = useState(99.9); const down = 365 * 24 * 60 * ((100-sla)/100); return (<div className="h-full flex flex-col"><h4 className="font-bold text-yellow-400 text-sm mb-4 flex items-center gap-2"><Clock size={14}/> SLA UPTIME</h4><GlassInput label="SLA (%)" value={sla} onChange={setSla} /><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Downtime/Ano</span><span className="font-mono text-lg text-white font-bold">{down.toFixed(1)} min</span></div></div>); };
@@ -200,7 +338,7 @@ export default function Portfolio() {
   return (
     <main className="relative min-h-screen font-sans selection:bg-emerald-500/30 pb-10">
       <LiquidArrowCursor />
-      <div className="mesh-bg" />
+      <NetworkBackground />
       <div className="noise-overlay" />
       <Navbar />
       
@@ -220,13 +358,13 @@ export default function Portfolio() {
                <span className="text-xs font-bold text-emerald-400 tracking-[0.2em] uppercase">Disponível para Projetos</span>
              </div>
              
-             <h1 className="text-6xl sm:text-7xl md:text-9xl font-black text-white tracking-tighter mb-8 leading-[0.85]">
-               INFRASTRUCTURE<br/>
+             <h1 className="text-6xl sm:text-7xl md:text-9xl font-black text-white tracking-tighter mb-8 leading-[0.9]">
+               <HyperText text="INFRASTRUCTURE" className="block" /><br/>
                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-200 to-emerald-400 animate-pulse">& CODE.</span>
              </h1>
              
              <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-12 leading-relaxed font-light">
-               Construindo a internet física com <strong>Fibra Óptica</strong> e a inteligência lógica com <strong>Python</strong>. O profissional híbrido definitivo.
+               A fusão definitiva entre <strong>Telecomunicações</strong> e <strong>Desenvolvimento</strong>. Transformando fibra óptica em inteligência digital.
              </p>
 
              <div className="flex flex-col sm:flex-row justify-center gap-6 w-full items-center">
@@ -234,16 +372,17 @@ export default function Portfolio() {
                <NeonButton icon={Download}>Baixar CV</NeonButton>
              </div>
            </motion.div>
-           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1, duration: 1 }} className="absolute bottom-10 flex flex-col items-center gap-2 opacity-50">
-             <span className="text-[10px] uppercase tracking-widest text-slate-500">Scroll</span>
+           
+           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5, duration: 1 }} className="absolute bottom-10 flex flex-col items-center gap-2 opacity-50">
+             <span className="text-[10px] uppercase tracking-widest text-slate-500">Scroll Down</span>
              <div className="w-px h-12 bg-gradient-to-b from-slate-500 to-transparent" />
            </motion.div>
         </section>
 
-        {/* HABILIDADES */}
+        {/* SKILLS */}
         <section id="habilidades" className="py-32 max-w-7xl mx-auto">
           <div className="flex items-end gap-6 mb-16">
-             <h2 className="text-5xl md:text-7xl font-black text-white/10 absolute select-none -translate-y-12 -translate-x-6">SKILLS</h2>
+             <h2 className="text-5xl md:text-7xl font-black text-white/5 absolute select-none -translate-y-12 -translate-x-6">EXPERTISE</h2>
              <h2 className="text-4xl font-bold text-white relative z-10">Dominância Técnica</h2>
              <div className="h-px bg-white/10 flex-1 hidden md:block mb-3" />
           </div>
@@ -259,16 +398,16 @@ export default function Portfolio() {
           </div>
         </section>
 
-        {/* PROJETOS */}
+        {/* PROJETOS (COM BORDER BEAM) */}
         <section id="projetos" className="py-32 max-w-7xl mx-auto">
           <div className="flex items-end gap-6 mb-16">
-             <h2 className="text-5xl md:text-7xl font-black text-white/10 absolute select-none -translate-y-12 -translate-x-6">WORK</h2>
+             <h2 className="text-5xl md:text-7xl font-black text-white/5 absolute select-none -translate-y-12 -translate-x-6">PORTFOLIO</h2>
              <h2 className="text-4xl font-bold text-white relative z-10">Projetos Recentes</h2>
              <div className="h-px bg-white/10 flex-1 hidden md:block mb-3" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project, i) => (
-              <GlassCard key={i} delay={i * 0.1} className="hover:border-emerald-500/30 interactive group">
+              <GlassCard key={i} delay={i * 0.1} withBeam className="hover:border-emerald-500/30 interactive group">
                 <div className="flex justify-between items-start mb-8">
                   <div className="p-3 bg-black/40 rounded-xl border border-white/10 text-emerald-400 group-hover:text-white group-hover:bg-emerald-500 transition-all duration-300"><project.icon size={24} /></div>
                   <ArrowUpRight className="text-slate-600 group-hover:text-white group-hover:rotate-45 transition-all duration-300" size={24} />
@@ -287,7 +426,7 @@ export default function Portfolio() {
             <div className="text-center mb-16 relative z-10">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold tracking-widest uppercase mb-6"><MonitorPlay size={14} /> Área Interativa</div>
               <h2 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">Laboratório de Testes</h2>
-              <p className="text-slate-400 max-w-2xl mx-auto text-lg">Ferramentas funcionais desenvolvidas para demonstrar lógica de programação.</p>
+              <p className="text-slate-400 max-w-2xl mx-auto text-lg">A prova prática de que hardware e software falam a mesma língua.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
               <GlassCard className="bg-black/60"><FiberCalc /></GlassCard>
@@ -312,7 +451,7 @@ export default function Portfolio() {
                   <div className="w-3 h-3 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
                   <span className="font-bold text-white text-xl tracking-tight">VIICTOR<span className="text-emerald-500">N</span></span>
                 </div>
-                <p className="text-slate-400 text-sm leading-relaxed max-w-sm mb-8">Focado em entregar excelência técnica em cada conexão e cada linha de código.</p>
+                <p className="text-slate-400 text-sm leading-relaxed max-w-sm mb-8">Excelência em Telecomunicações. Inovação em Desenvolvimento.</p>
                 <div className="flex gap-4">
                   <a href="#" className="w-10 h-10 rounded-full bg-white/5 hover:bg-emerald-500 hover:text-black flex items-center justify-center transition-all interactive"><Github size={20}/></a>
                   <a href="#" className="w-10 h-10 rounded-full bg-white/5 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all interactive"><Linkedin size={20}/></a>
