@@ -4,48 +4,38 @@
 
 :root {
   --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 5, 5, 5;
+  --background-start-rgb: 0, 0, 0;
   --background-end-rgb: 0, 0, 0;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: #030303; /* Preto profundo */
+  background: #000000;
   overflow-x: hidden;
 }
 
-/* Efeito de Granulação (Noise) para sofisticação */
-.bg-noise {
+/* Efeito de Grid Técnico no Fundo */
+.bg-grid {
+  background-size: 50px 50px;
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  mask-image: linear-gradient(to bottom, transparent, 10%, white, 90%, transparent);
+}
+
+/* O Holofote (Spotlight) que segue o mouse */
+.spotlight {
+  background: radial-gradient(
+    800px circle at var(--mouse-x) var(--mouse-y),
+    rgba(16, 185, 129, 0.15),
+    transparent 40%
+  );
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
+  inset: 0;
   z-index: 1;
-  opacity: 0.05;
-  background-image: url("https://grainy-gradients.vercel.app/noise.svg");
-  filter: contrast(170%) brightness(100%);
+  pointer-events: none;
 }
 
-/* Bolhas de cor animadas no fundo */
-.blob {
-  position: absolute;
-  filter: blur(80px);
-  z-index: 0;
-  opacity: 0.4;
-  animation: float 10s infinite ease-in-out;
-}
-
-@keyframes float {
-  0% { transform: translate(0px, 0px) scale(1); }
-  33% { transform: translate(30px, -50px) scale(1.1); }
-  66% { transform: translate(-20px, 20px) scale(0.9); }
-  100% { transform: translate(0px, 0px) scale(1); }
-}
-
-/* Scrollbar invisível para design limpo */
+/* Scrollbar invisível */
 ::-webkit-scrollbar {
   width: 0px;
-  background: transparent;
 }
