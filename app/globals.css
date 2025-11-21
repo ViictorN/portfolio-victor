@@ -12,10 +12,10 @@ body {
   color: rgb(var(--foreground-rgb));
   background: #050505;
   overflow-x: hidden;
-  cursor: none; /* Esconde o mouse padrão */
+  cursor: none; /* Cursor customizado ativo */
 }
 
-/* --- ANIMAÇÃO DE PULSO ÓPTICO (BORDER BEAM) --- */
+/* --- ANIMAÇÕES --- */
 @keyframes border-beam {
   100% { offset-distance: 100%; }
 }
@@ -24,28 +24,32 @@ body {
   animation: border-beam calc(var(--duration)*1s) infinite linear;
 }
 
-/* --- UTILITÁRIOS DE TEXTURA E VIDRO --- */
-
-/* Granulação de Cinema */
+/* --- UTILITÁRIOS VISUAIS --- */
 .noise-overlay {
   position: fixed;
   inset: 0;
   z-index: 1;
-  opacity: 0.03;
+  opacity: 0.04;
   pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
 }
 
-/* Painel de Vidro Padrão */
 .glass-panel {
   background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
 }
 
-/* Scrollbar Personalizada */
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: #020202; }
+/* Navbar Glass */
+.nav-glass {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #050505; }
 ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: #10b981; }

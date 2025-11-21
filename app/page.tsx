@@ -9,10 +9,10 @@ import {
   Download, Github, Linkedin, ChevronDown, Activity, 
   Zap, Database, Globe, Lock, Network, ShieldCheck, 
   Gauge, Menu, X, ArrowUpRight, HardDrive, Clock, 
-  ArrowUp, Cable, MonitorPlay, MapPin
+  ArrowUp, Cable, MonitorPlay, MapPin, Router, Key, Signal
 } from 'lucide-react';
 
-// --- 1. EFEITO: NETWORK BACKGROUND (CANVAS) ---
+// --- 1. BACKGROUND DE REDE NEURAL (CANVAS) ---
 const NetworkBackground = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -27,8 +27,8 @@ const NetworkBackground = () => {
     let particles: Particle[] = [];
     
     const properties = {
-      bgColor: 'rgba(5, 5, 5, 0)', // Transparente para ver o fundo preto
-      particleColor: 'rgba(16, 185, 129, 0.5)', // Verde Emerald
+      bgColor: 'rgba(5, 5, 5, 0)', 
+      particleColor: 'rgba(16, 185, 129, 0.5)',
       particleRadius: 1.5,
       particleCount: 60,
       lineLength: 150,
@@ -58,11 +58,7 @@ const NetworkBackground = () => {
       }
     }
 
-    const reDrawBackground = () => {
-      if (!ctx) return;
-      ctx.clearRect(0, 0, w, h);
-    };
-
+    const reDrawBackground = () => { if(ctx) ctx.clearRect(0, 0, w, h); };
     const drawLines = () => {
       if (!ctx) return;
       let x1, y1, x2, y2, length, opacity;
@@ -83,36 +79,12 @@ const NetworkBackground = () => {
         }
       }
     };
-
-    const reDrawParticles = () => {
-      for (let i in particles) {
-        particles[i].position();
-        particles[i].reDraw();
-      }
-    };
-
-    const loop = () => {
-      reDrawBackground();
-      reDrawParticles();
-      drawLines();
-      requestAnimationFrame(loop);
-    };
-
-    const init = () => {
-      particles = [];
-      for (let i = 0; i < properties.particleCount; i++) {
-        particles.push(new Particle());
-      }
-      loop();
-    };
-
+    const reDrawParticles = () => { for (let i in particles) { particles[i].position(); particles[i].reDraw(); } };
+    const loop = () => { reDrawBackground(); reDrawParticles(); drawLines(); requestAnimationFrame(loop); };
+    const init = () => { particles = []; for (let i = 0; i < properties.particleCount; i++) particles.push(new Particle()); loop(); };
+    
     init();
-
-    const handleResize = () => {
-      w = canvas.width = window.innerWidth;
-      h = canvas.height = window.innerHeight;
-    };
-
+    const handleResize = () => { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -120,45 +92,30 @@ const NetworkBackground = () => {
   return <canvas ref={canvasRef} className="fixed inset-0 z-0 opacity-30 pointer-events-none" />;
 };
 
-// --- 2. EFEITO: HYPERTEXT (Decodificador) ---
+// --- 2. EFEITO HYPERTEXT ---
 const HyperText = ({ text, className = "" }: { text: string, className?: string }) => {
   const [displayText, setDisplayText] = useState(text);
   const iterations = useRef(0);
-
   useEffect(() => {
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
     const interval = setInterval(() => {
-      setDisplayText(text
-        .split("")
-        .map((letter, index) => {
-          if (index < iterations.current) return text[index];
-          return letters[Math.floor(Math.random() * 26)];
-        })
-        .join("")
-      );
+      setDisplayText(text.split("").map((letter, index) => index < iterations.current ? text[index] : letters[Math.floor(Math.random() * 26)]).join(""));
       if (iterations.current >= text.length) clearInterval(interval);
       iterations.current += 1 / 3;
     }, 30);
     return () => clearInterval(interval);
   }, [text]);
-
   return <span className={`font-mono ${className}`}>{displayText}</span>;
 };
 
-// --- 3. EFEITO: BORDER BEAM (Feixe de Luz) ---
+// --- 3. EFEITO BORDER BEAM ---
 const BorderBeam = ({ duration = 4, size = 200 }: { duration?: number, size?: number }) => (
-  <div 
-    style={{ "--duration": duration } as React.CSSProperties}
-    className="pointer-events-none absolute inset-0 rounded-2xl border border-transparent [mask-clip:padding-box,border-box] [mask-composite:intersect] [mask-image:linear-gradient(transparent,transparent),linear-gradient(#000,#000)]"
-  >
-    <div 
-      className="absolute aspect-square inset-0 animate-border-beam bg-gradient-to-l from-transparent via-emerald-500 to-transparent"
-      style={{ width: size, offsetPath: "rect(0 auto auto 0 round 16px)" }}
-    />
+  <div style={{ "--duration": duration } as React.CSSProperties} className="pointer-events-none absolute inset-0 rounded-2xl border border-transparent [mask-clip:padding-box,border-box] [mask-composite:intersect] [mask-image:linear-gradient(transparent,transparent),linear-gradient(#000,#000)]">
+    <div className="absolute aspect-square inset-0 animate-border-beam bg-gradient-to-l from-transparent via-emerald-500 to-transparent" style={{ width: size, offsetPath: "rect(0 auto auto 0 round 16px)" }} />
   </div>
 );
 
-// --- 4. UX: CURSOR LIQUID GLASS (ZERO DELAY) ---
+// --- 4. CURSOR ---
 function LiquidArrowCursor() {
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
@@ -166,24 +123,11 @@ function LiquidArrowCursor() {
   const [isClicking, setIsClicking] = useState(false);
 
   useEffect(() => {
-    const moveCursor = (e: MouseEvent) => {
-      cursorX.set(e.clientX);
-      cursorY.set(e.clientY);
-      const target = e.target as HTMLElement;
-      const isInteractive = target.closest('button') || target.closest('a') || target.closest('input') || target.closest('.interactive');
-      setIsHovering(!!isInteractive);
-    };
+    const moveCursor = (e: MouseEvent) => { cursorX.set(e.clientX); cursorY.set(e.clientY); setIsHovering(!!(e.target as HTMLElement).closest('.interactive')); };
     const mouseDown = () => setIsClicking(true);
     const mouseUp = () => setIsClicking(false);
-
-    window.addEventListener('mousemove', moveCursor);
-    window.addEventListener('mousedown', mouseDown);
-    window.addEventListener('mouseup', mouseUp);
-    return () => {
-      window.removeEventListener('mousemove', moveCursor);
-      window.removeEventListener('mousedown', mouseDown);
-      window.removeEventListener('mouseup', mouseUp);
-    };
+    window.addEventListener('mousemove', moveCursor); window.addEventListener('mousedown', mouseDown); window.addEventListener('mouseup', mouseUp);
+    return () => { window.removeEventListener('mousemove', moveCursor); window.removeEventListener('mousedown', mouseDown); window.removeEventListener('mouseup', mouseUp); };
   }, []);
 
   return (
@@ -197,23 +141,15 @@ function LiquidArrowCursor() {
   );
 }
 
-// --- COMPONENTES DE UI REFINADOS ---
-
+// --- COMPONENTES UI ---
 const NeonButton = ({ children, primary = false, icon: Icon, onClick }: any) => (
   <motion.button
     whileHover={{ scale: 1.02, textShadow: "0 0 10px rgba(16,185,129,0.8)" }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
-    className={`
-      relative px-8 py-4 rounded-full font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all duration-300 interactive
-      ${primary 
-        ? "bg-emerald-500 text-black shadow-[0_0_25px_rgba(16,185,129,0.5)] hover:bg-emerald-400 border border-emerald-400" 
-        : "bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:border-emerald-500/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]"
-      }
-    `}
+    className={`relative px-8 py-4 rounded-full font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all duration-300 interactive ${primary ? "bg-emerald-500 text-black shadow-[0_0_25px_rgba(16,185,129,0.5)] hover:bg-emerald-400 border border-emerald-400" : "bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:border-emerald-500/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]"}`}
   >
-    {Icon && <Icon size={18} />}
-    {children}
+    {Icon && <Icon size={18} />} {children}
   </motion.button>
 );
 
@@ -229,28 +165,21 @@ function GlassCard({ children, className = "", delay = 0, withBeam = false }: { 
       initial={{ opacity: 0, y: 20 }}
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
       transition={{ duration: 0.5, delay }}
-      onMouseMove={({ currentTarget, clientX, clientY }) => {
-        const { left, top } = currentTarget.getBoundingClientRect();
-        mouseX.set(clientX - left);
-        mouseY.set(clientY - top);
-      }}
+      onMouseMove={({ currentTarget, clientX, clientY }) => { const { left, top } = currentTarget.getBoundingClientRect(); mouseX.set(clientX - left); mouseY.set(clientY - top); }}
       className={`group relative overflow-hidden rounded-2xl glass-panel ${className}`}
     >
       {withBeam && <BorderBeam />}
-      <motion.div
-        className="pointer-events-none absolute -inset-px opacity-0 transition duration-300 group-hover:opacity-100"
-        style={{
-          background: useMotionTemplate`radial-gradient(600px circle at ${mouseX}px ${mouseY}px, rgba(16, 185, 129, 0.05), transparent 80%)`,
-        }}
-      />
+      <motion.div className="pointer-events-none absolute -inset-px opacity-0 transition duration-300 group-hover:opacity-100" style={{ background: useMotionTemplate`radial-gradient(600px circle at ${mouseX}px ${mouseY}px, rgba(16, 185, 129, 0.05), transparent 80%)` }} />
       <div className="relative z-10 h-full p-6 flex flex-col">{children}</div>
     </motion.div>
   );
 }
 
+// --- NAVBAR (COM HAMBURGUER FUNCIONAL) ---
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll);
@@ -259,12 +188,14 @@ function Navbar() {
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${scrolled ? 'py-3 bg-black/80 backdrop-blur-xl border-b border-white/5 shadow-lg' : 'py-6 bg-transparent'}`}>
+      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${scrolled ? 'py-3 nav-glass shadow-lg' : 'py-6 bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           <div className="flex items-center gap-2 interactive cursor-pointer" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]"/>
             <span className="font-bold text-white tracking-wider text-sm">VIICTOR<span className="text-emerald-500">N</span></span>
           </div>
+          
+          {/* Desktop Menu */}
           <div className="hidden md:flex gap-8 text-xs font-bold text-slate-400 uppercase tracking-widest">
             {['Habilidades', 'Projetos', 'Laboratório'].map((item) => (
               <a key={item} href={`#${item.toLowerCase().replace('á','a').replace('ó','o')}`} className="hover:text-emerald-400 transition-colors pb-1 interactive hover:shadow-[0_2px_0px_rgba(16,185,129,1)]">{item}</a>
@@ -273,17 +204,30 @@ function Navbar() {
           <div className="hidden md:block">
              <a href="mailto:victor140730@gmail.com" className="px-5 py-2 rounded-full bg-white/5 hover:bg-emerald-500/20 border border-white/10 hover:border-emerald-500/50 text-xs font-bold text-white transition-all interactive">FALE COMIGO</a>
           </div>
-          <button onClick={() => setIsOpen(true)} className="md:hidden text-white interactive"><Menu size={24} /></button>
+
+          {/* Mobile Menu Button (Z-Index Alto para garantir clique) */}
+          <button onClick={() => setIsOpen(true)} className="md:hidden text-white interactive p-2 rounded-lg bg-white/5 border border-white/10 relative z-50">
+            <Menu size={24} />
+          </button>
         </div>
       </nav>
+
+      {/* Mobile Fullscreen Overlay */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 20 }} className="fixed inset-0 bg-black/95 z-[60] flex flex-col items-center justify-center gap-8 backdrop-blur-xl">
-            <button onClick={() => setIsOpen(false)} className="absolute top-8 right-8 text-slate-400 hover:text-white"><X size={32} /></button>
-            <nav className="flex flex-col items-center gap-8 text-3xl font-black text-white tracking-tighter">
-              <a onClick={() => setIsOpen(false)} href="#habilidades">HABILIDADES</a>
-              <a onClick={() => setIsOpen(false)} href="#projetos">PROJETOS</a>
-              <a onClick={() => setIsOpen(false)} href="#laboratorio">LABORATÓRIO</a>
+          <motion.div 
+            initial={{ x: "100%" }} 
+            animate={{ x: 0 }} 
+            exit={{ x: "100%" }} 
+            transition={{ type: "spring", damping: 20 }} 
+            className="fixed inset-0 bg-black/95 z-[100] flex flex-col items-center justify-center gap-8 backdrop-blur-2xl"
+          >
+            <button onClick={() => setIsOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-white p-2 bg-white/5 rounded-full interactive"><X size={32} /></button>
+            <nav className="flex flex-col items-center gap-10 text-3xl font-black text-white tracking-tighter">
+              <a onClick={() => setIsOpen(false)} href="#habilidades" className="hover:text-emerald-500 transition-colors interactive">HABILIDADES</a>
+              <a onClick={() => setIsOpen(false)} href="#projetos" className="hover:text-emerald-500 transition-colors interactive">PROJETOS</a>
+              <a onClick={() => setIsOpen(false)} href="#laboratorio" className="hover:text-emerald-500 transition-colors interactive">LABORATÓRIO</a>
+              <a onClick={() => setIsOpen(false)} href="mailto:victor140730@gmail.com" className="text-emerald-500 mt-4 text-lg font-mono border border-emerald-500/50 px-6 py-3 rounded-full interactive">FALE COMIGO</a>
             </nav>
           </motion.div>
         )}
@@ -292,7 +236,7 @@ function Navbar() {
   );
 }
 
-// --- FERRAMENTAS & DADOS ---
+// --- FERRAMENTAS (12 ITENS) ---
 const GlassInput = ({ label, value, onChange, suffix }: any) => (
   <div className="mb-3 w-full interactive">
     <label className="text-[10px] uppercase tracking-wider text-slate-500 mb-1 block ml-1 font-bold">{label}</label>
@@ -303,16 +247,21 @@ const GlassInput = ({ label, value, onChange, suffix }: any) => (
   </div>
 );
 
-const FiberCalc = () => { const [d, setD] = useState(10); const [s, setS] = useState(2); return (<div className="h-full flex flex-col"><h4 className="font-bold text-emerald-400 text-sm mb-4 flex items-center gap-2"><Activity size={14}/> LOSS BUDGET</h4><GlassInput label="Distância (Km)" value={d} onChange={setD} /><GlassInput label="Emendas (Qtd)" value={s} onChange={setS} /><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Total Estimado</span><span className="font-mono text-lg text-white font-bold">{((d*0.35)+(s*0.1)+1).toFixed(2)} dB</span></div></div>); };
-const DownloadCalc = () => { const [s, setS] = useState(50); const [sp, setSp] = useState(300); const t = (s*8000)/sp; return (<div className="h-full flex flex-col"><h4 className="font-bold text-cyan-400 text-sm mb-4 flex items-center gap-2"><Download size={14}/> TEMPO DOWNLOAD</h4><GlassInput label="Arquivo (GB)" value={s} onChange={setS} /><GlassInput label="Velocidade (Mbps)" value={sp} onChange={setSp} /><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Tempo</span><span className="font-mono text-lg text-white font-bold">{t<60?t.toFixed(0)+'s':(t/60).toFixed(1)+'m'}</span></div></div>); };
-const SubnetCalc = () => { const [c, setC] = useState(24); return (<div className="h-full flex flex-col"><h4 className="font-bold text-orange-400 text-sm mb-4 flex items-center gap-2"><Network size={14}/> IPV4 SUBNET</h4><div className="mb-4 interactive"><label className="text-xs text-slate-500 block mb-2 font-bold">PREFIXO: /{c}</label><input type="range" min="16" max="30" value={c} onChange={(e)=>setC(Number(e.target.value))} className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-orange-500 hover:accent-orange-400"/></div><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Hosts Úteis</span><span className="font-mono text-lg text-white font-bold">{(Math.pow(2, 32-c)-2).toLocaleString()}</span></div></div>); };
-const RaidCalc = () => { const [d, setD] = useState(4); const [sz, setSz] = useState(2); return (<div className="h-full flex flex-col"><h4 className="font-bold text-red-400 text-sm mb-4 flex items-center gap-2"><HardDrive size={14}/> RAID 5 CALC</h4><GlassInput label="Discos" value={d} onChange={setD} /><GlassInput label="Tamanho (TB)" value={sz} onChange={setSz} /><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Capacidade</span><span className="font-mono text-lg text-white font-bold">{((d-1)*sz)} TB</span></div></div>); };
-const UptimeCalc = () => { const [sla, setSla] = useState(99.9); const down = 365 * 24 * 60 * ((100-sla)/100); return (<div className="h-full flex flex-col"><h4 className="font-bold text-yellow-400 text-sm mb-4 flex items-center gap-2"><Clock size={14}/> SLA UPTIME</h4><GlassInput label="SLA (%)" value={sla} onChange={setSla} /><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Downtime/Ano</span><span className="font-mono text-lg text-white font-bold">{down.toFixed(1)} min</span></div></div>); };
-const DataConv = () => { const [gb, setGb] = useState(1); return (<div className="h-full flex flex-col"><h4 className="font-bold text-pink-400 text-sm mb-4 flex items-center gap-2"><Database size={14}/> CONVERSOR UNIT</h4><GlassInput label="Gigabytes" value={gb} onChange={setGb} /><div className="mt-auto pt-3 border-t border-white/10 text-right font-mono text-sm text-white leading-tight">{(gb*1024).toLocaleString()} MB <br/> {(gb*8192).toLocaleString()} Mbits</div></div>); };
+const FiberCalc = () => { const [d, setD] = useState(10); const [s, setS] = useState(2); return (<div className="h-full flex flex-col"><h4 className="font-bold text-emerald-400 text-sm mb-4 flex items-center gap-2"><Activity size={14}/> LOSS BUDGET</h4><GlassInput label="Km" value={d} onChange={setD} /><GlassInput label="Emendas" value={s} onChange={setS} /><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Total</span><span className="font-mono text-lg text-white font-bold">{((d*0.35)+(s*0.1)+1).toFixed(2)} dB</span></div></div>); };
+const DownloadCalc = () => { const [s, setS] = useState(50); const [sp, setSp] = useState(300); const t = (s*8000)/sp; return (<div className="h-full flex flex-col"><h4 className="font-bold text-cyan-400 text-sm mb-4 flex items-center gap-2"><Download size={14}/> TEMPO DOWNLOAD</h4><GlassInput label="GB" value={s} onChange={setS} /><GlassInput label="Mbps" value={sp} onChange={setSp} /><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Tempo</span><span className="font-mono text-lg text-white font-bold">{t<60?t.toFixed(0)+'s':(t/60).toFixed(1)+'m'}</span></div></div>); };
+const SubnetCalc = () => { const [c, setC] = useState(24); return (<div className="h-full flex flex-col"><h4 className="font-bold text-orange-400 text-sm mb-4 flex items-center gap-2"><Network size={14}/> IPV4 SUBNET</h4><div className="mb-4 interactive"><label className="text-xs text-slate-500 block mb-2 font-bold">PREFIXO: /{c}</label><input type="range" min="16" max="30" value={c} onChange={(e)=>setC(Number(e.target.value))} className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-orange-500 hover:accent-orange-400"/></div><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Hosts</span><span className="font-mono text-lg text-white font-bold">{(Math.pow(2, 32-c)-2).toLocaleString()}</span></div></div>); };
+const RaidCalc = () => { const [d, setD] = useState(4); const [sz, setSz] = useState(2); return (<div className="h-full flex flex-col"><h4 className="font-bold text-red-400 text-sm mb-4 flex items-center gap-2"><HardDrive size={14}/> RAID 5 CALC</h4><GlassInput label="Discos" value={d} onChange={setD} /><GlassInput label="TB" value={sz} onChange={setSz} /><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Útil</span><span className="font-mono text-lg text-white font-bold">{((d-1)*sz)} TB</span></div></div>); };
+const UptimeCalc = () => { const [sla, setSla] = useState(99.9); const down = 365 * 24 * 60 * ((100-sla)/100); return (<div className="h-full flex flex-col"><h4 className="font-bold text-yellow-400 text-sm mb-4 flex items-center gap-2"><Clock size={14}/> SLA UPTIME</h4><GlassInput label="SLA (%)" value={sla} onChange={setSla} /><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Down/Ano</span><span className="font-mono text-lg text-white font-bold">{down.toFixed(1)} min</span></div></div>); };
+const DataConv = () => { const [gb, setGb] = useState(1); return (<div className="h-full flex flex-col"><h4 className="font-bold text-pink-400 text-sm mb-4 flex items-center gap-2"><Database size={14}/> CONVERSOR UNIT</h4><GlassInput label="GB" value={gb} onChange={setGb} /><div className="mt-auto pt-3 border-t border-white/10 text-right font-mono text-sm text-white leading-tight">{(gb*1024).toLocaleString()} MB <br/> {(gb*8192).toLocaleString()} Mbits</div></div>); };
 const PowerConv = () => { const [db, setDb] = useState(0); return (<div className="h-full flex flex-col"><h4 className="font-bold text-purple-400 text-sm mb-4 flex items-center gap-2"><Zap size={14}/> DBM TO MW</h4><GlassInput label="dBm" value={db} onChange={setDb} /><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Linear</span><span className="font-mono text-lg text-white font-bold">{Math.pow(10, db/10).toFixed(4)} mW</span></div></div>); };
-const MacCheck = () => { const [m, setM] = useState(""); const v = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/.test(m); return (<div className="h-full flex flex-col"><h4 className="font-bold text-teal-400 text-sm mb-4 flex items-center gap-2"><ShieldCheck size={14}/> MAC CHECK</h4><GlassInput label="Endereço MAC" value={m} onChange={setM} /><div className={`mt-auto pt-3 border-t border-white/10 flex justify-between items-center font-bold text-sm ${v?'text-emerald-400':'text-rose-400'}`}><span className="text-xs text-slate-500">Status</span>{m.length===0?'...':v?'VÁLIDO':'INVÁLIDO'}</div></div>); };
-const PingSim = () => { const [p, setP] = useState(0); const [l, setL] = useState(false); const run = async () => { setL(true); setP(0); await new Promise(r=>setTimeout(r,600)); setP(Math.floor(Math.random()*60+10)); setL(false); }; return (<div className="h-full flex flex-col"><h4 className="font-bold text-blue-400 text-sm mb-4 flex items-center gap-2"><Gauge size={14}/> LATENCY TEST</h4><button onClick={run} disabled={l} className="interactive w-full py-3 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 text-xs font-bold border border-blue-500/30 transition-all mb-2">{l?'ENVIANDO...':'TESTAR PING'}</button><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Latência</span><span className="font-mono text-lg text-white font-bold">{p>0?p+'ms':'--'}</span></div></div>); };
+const MacCheck = () => { const [m, setM] = useState(""); const v = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/.test(m); return (<div className="h-full flex flex-col"><h4 className="font-bold text-teal-400 text-sm mb-4 flex items-center gap-2"><ShieldCheck size={14}/> MAC CHECK</h4><GlassInput label="MAC Address" value={m} onChange={setM} /><div className={`mt-auto pt-3 border-t border-white/10 flex justify-between items-center font-bold text-sm ${v?'text-emerald-400':'text-rose-400'}`}><span className="text-xs text-slate-500">Status</span>{m.length===0?'...':v?'VÁLIDO':'INVÁLIDO'}</div></div>); };
+const PingSim = () => { const [p, setP] = useState(0); const [l, setL] = useState(false); const run = async () => { setL(true); setP(0); await new Promise(r=>setTimeout(r,600)); setP(Math.floor(Math.random()*60+10)); setL(false); }; return (<div className="h-full flex flex-col"><h4 className="font-bold text-blue-400 text-sm mb-4 flex items-center gap-2"><Gauge size={14}/> PING TEST</h4><button onClick={run} disabled={l} className="interactive w-full py-3 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 text-xs font-bold border border-blue-500/30 transition-all mb-2">{l?'ENVIANDO...':'PING'}</button><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Latência</span><span className="font-mono text-lg text-white font-bold">{p>0?p+'ms':'--'}</span></div></div>); };
+// NOVAS FERRAMENTAS
+const DnsCalc = () => { const [t, setT] = useState(0); const [l, setL] = useState(false); const check = async () => { setL(true); await new Promise(r=>setTimeout(r,1000)); setT(Math.floor(Math.random()*150+20)); setL(false); }; return (<div className="h-full flex flex-col"><h4 className="font-bold text-indigo-400 text-sm mb-4 flex items-center gap-2"><Globe size={14}/> DNS LOOKUP</h4><button onClick={check} disabled={l} className="interactive w-full py-3 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 text-xs font-bold border border-indigo-500/30 transition-all mb-2">{l?'RESOLVENDO...':'CHECK DNS'}</button><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Propagação</span><span className="font-mono text-lg text-white font-bold">{t>0?t+'ms':'--'}</span></div></div>); };
+const PassGen = () => { const [p, setP] = useState("******"); const gen = () => { setP(Math.random().toString(36).slice(-8).toUpperCase()); }; return (<div className="h-full flex flex-col"><h4 className="font-bold text-lime-400 text-sm mb-4 flex items-center gap-2"><Key size={14}/> PASS GEN</h4><div className="p-3 bg-black/40 rounded mb-2 font-mono text-center text-white tracking-widest">{p}</div><button onClick={gen} className="mt-auto interactive w-full py-2 rounded-lg bg-lime-500/10 hover:bg-lime-500/20 text-lime-300 text-xs font-bold border border-lime-500/30 transition-all">GERAR SENHA</button></div>); };
+const BandwidthCalc = () => { const [hz, setHz] = useState(20); return (<div className="h-full flex flex-col"><h4 className="font-bold text-fuchsia-400 text-sm mb-4 flex items-center gap-2"><Signal size={14}/> BANDWIDTH</h4><GlassInput label="MHz" value={hz} onChange={setHz} /><div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-center"><span className="text-xs text-slate-500">Max Teórico</span><span className="font-mono text-sm text-white font-bold">{(hz*2).toFixed(0)} Mbps</span></div></div>); };
 
+// --- DADOS EXPANDIDOS ---
 const skills = [
   { name: "FIBRA ÓPTICA", level: 98, icon: Wifi, desc: "Fusão, OTDR, Power Meter" },
   { name: "REDES TCP/IP", level: 95, icon: Network, desc: "LAN, WAN, IPv4/IPv6" },
@@ -325,18 +274,23 @@ const skills = [
   { name: "DATABASE", level: 70, icon: Database, desc: "SQL, Radius" },
   { name: "SEGURANÇA", level: 82, icon: Lock, desc: "VPN, Firewall, SSH" },
 ];
+
 const projects = [
-  { title: "FiberOptic Monitor", desc: "Monitoramento via SNMP para OLTs Huawei/ZTE com gráficos em tempo real.", tags: ["Python", "SNMP"], icon: Activity },
-  { title: "AutoProvision Bot", desc: "Bot que configura ONUs e Switches automaticamente, reduzindo setup.", tags: ["Python", "Bot"], icon: Terminal },
-  { title: "ISP Dashboard", desc: "Painel de gestão para provedores: clientes, financeiro e suporte.", tags: ["Next.js", "React"], icon: Globe },
-  { title: "SecureNet VPN", desc: "Túnel WireGuard em Docker com 2FA para acesso remoto seguro.", tags: ["Docker", "Sec"], icon: Lock },
-  { title: "Cabling Project", desc: "Projeto de cabeamento estruturado para 200 pontos certificado.", tags: ["Infra", "CAD"], icon: Cable },
-  { title: "Zabbix Alerts", desc: "Integração Zabbix com Telegram para alertas críticos de rede.", tags: ["Zabbix", "API"], icon: Zap }
+  { title: "FiberOptic Monitor", desc: "Monitoramento via SNMP para OLTs Huawei/ZTE com gráficos em tempo real e alertas.", tags: ["Python", "SNMP"], icon: Activity },
+  { title: "AutoProvision Bot", desc: "Bot que configura ONUs e Switches automaticamente, reduzindo setup em 90%.", tags: ["Python", "Bot"], icon: Terminal },
+  { title: "ISP Dashboard", desc: "Painel de gestão para provedores: clientes, financeiro e suporte técnico integrado.", tags: ["Next.js", "React"], icon: Globe },
+  { title: "SecureNet VPN", desc: "Túnel WireGuard em Docker com 2FA para acesso remoto seguro da equipe.", tags: ["Docker", "Sec"], icon: Lock },
+  { title: "Cabling Project", desc: "Projeto de cabeamento estruturado para 200 pontos, certificado e documentado.", tags: ["Infra", "CAD"], icon: Cable },
+  { title: "Zabbix Alerts", desc: "Integração Zabbix com Telegram para alertas críticos de rede instantâneos.", tags: ["Zabbix", "API"], icon: Zap },
+  { title: "GPON Signal Analyzer", desc: "Script que varre toda a rede GPON identificando clientes com sinal degradado (-27dBm).", tags: ["Python", "GPON"], icon: Signal },
+  { title: "Radius Billing Core", desc: "Backend para processamento de logs Radius e geração de faturas automáticas.", tags: ["Node.js", "SQL"], icon: Server },
+  { title: "Smart Home Gateway", desc: "Integração de IoT caseira usando Home Assistant e scripts Python customizados.", tags: ["IoT", "Python"], icon: Router },
 ];
 
+// --- LAYOUT PRINCIPAL ---
 export default function Portfolio() {
   return (
-    <main className="relative min-h-screen font-sans selection:bg-emerald-500/30 pb-10">
+    <main className="relative min-h-screen font-sans selection:bg-emerald-500/30">
       <LiquidArrowCursor />
       <NetworkBackground />
       <div className="noise-overlay" />
@@ -372,7 +326,6 @@ export default function Portfolio() {
                <NeonButton icon={Download}>Baixar CV</NeonButton>
              </div>
            </motion.div>
-           
            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5, duration: 1 }} className="absolute bottom-10 flex flex-col items-center gap-2 opacity-50">
              <span className="text-[10px] uppercase tracking-widest text-slate-500">Scroll Down</span>
              <div className="w-px h-12 bg-gradient-to-b from-slate-500 to-transparent" />
@@ -398,7 +351,7 @@ export default function Portfolio() {
           </div>
         </section>
 
-        {/* PROJETOS (COM BORDER BEAM) */}
+        {/* PROJETOS (9 ITENS) */}
         <section id="projetos" className="py-32 max-w-7xl mx-auto">
           <div className="flex items-end gap-6 mb-16">
              <h2 className="text-5xl md:text-7xl font-black text-white/5 absolute select-none -translate-y-12 -translate-x-6">PORTFOLIO</h2>
@@ -420,7 +373,7 @@ export default function Portfolio() {
           </div>
         </section>
 
-        {/* LABORATÓRIO */}
+        {/* LABORATÓRIO (12 ITENS) */}
         <section id="laboratorio" className="py-32 max-w-7xl mx-auto">
           <div className="glass-panel rounded-[40px] p-8 md:p-16 relative overflow-hidden border-t border-white/10">
             <div className="text-center mb-16 relative z-10">
@@ -428,7 +381,7 @@ export default function Portfolio() {
               <h2 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">Laboratório de Testes</h2>
               <p className="text-slate-400 max-w-2xl mx-auto text-lg">A prova prática de que hardware e software falam a mesma língua.</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
               <GlassCard className="bg-black/60"><FiberCalc /></GlassCard>
               <GlassCard className="bg-black/60"><DownloadCalc /></GlassCard>
               <GlassCard className="bg-black/60"><SubnetCalc /></GlassCard>
@@ -438,12 +391,15 @@ export default function Portfolio() {
               <GlassCard className="bg-black/60"><PowerConv /></GlassCard>
               <GlassCard className="bg-black/60"><MacCheck /></GlassCard>
               <GlassCard className="bg-black/60"><PingSim /></GlassCard>
+              <GlassCard className="bg-black/60"><DnsCalc /></GlassCard>
+              <GlassCard className="bg-black/60"><PassGen /></GlassCard>
+              <GlassCard className="bg-black/60"><BandwidthCalc /></GlassCard>
             </div>
           </div>
         </section>
 
-        {/* FOOTER */}
-        <footer className="border-t border-white/10 bg-black/80 backdrop-blur-xl pt-20 pb-10 mt-20">
+        {/* FOOTER ARREDONDADO */}
+        <footer className="rounded-t-[3rem] border-t border-white/10 bg-black/80 backdrop-blur-xl pt-20 pb-10 mt-20 relative z-10">
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
               <div className="col-span-1 md:col-span-2">
