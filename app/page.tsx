@@ -1,311 +1,268 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Wifi, 
-  Server, 
-  Code2, 
-  Cpu, 
-  Terminal, 
-  MapPin, 
-  Mail, 
-  Phone, 
-  Download, 
-  ExternalLink, 
-  Github, 
-  Linkedin,
-  ChevronDown
+  Wifi, Server, Code2, Cpu, Terminal, MapPin, Mail, Phone, 
+  Download, Github, Linkedin, ChevronDown, Activity, Layers, Zap 
 } from 'lucide-react';
 
-// --- Componentes de UI Reutilizáveis ---
+// --- COMPONENTES VISUAIS (GLASSMORPHISM) ---
 
-const Section = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => (
-  <motion.section 
+const GlassCard = ({ children, className = "", delay = 0 }: { children: React.ReactNode, className?: string, delay?: number }) => (
+  <motion.div 
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.6 }}
-    viewport={{ once: true }}
-    className={`py-20 px-6 md:px-12 max-w-7xl mx-auto ${className}`}
+    viewport={{ once: true, margin: "-50px" }}
+    transition={{ duration: 0.5, delay }}
+    whileHover={{ scale: 1.02, backgroundColor: "rgba(255, 255, 255, 0.07)" }}
+    className={`relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] p-6 transition-all duration-300 ${className}`}
   >
+    {/* Efeito de brilho no topo (Reflexo de vidro) */}
+    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
     {children}
-  </motion.section>
-);
-
-const Card = ({ title, desc, icon: Icon, tags }: { title: string, desc: string, icon: any, tags?: string[] }) => (
-  <motion.div 
-    whileHover={{ y: -5 }}
-    className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl backdrop-blur-sm hover:border-emerald-500/50 transition-colors group"
-  >
-    <div className="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center mb-4 group-hover:bg-emerald-500/20 transition-colors">
-      <Icon className="text-emerald-400 w-6 h-6" />
-    </div>
-    <h3 className="text-xl font-bold text-slate-100 mb-2">{title}</h3>
-    <p className="text-slate-400 text-sm leading-relaxed mb-4">{desc}</p>
-    {tags && (
-      <div className="flex flex-wrap gap-2">
-        {tags.map(tag => (
-          <span key={tag} className="text-xs px-2 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-            {tag}
-          </span>
-        ))}
-      </div>
-    )}
   </motion.div>
 );
 
-// --- Dados do Currículo & Projetos (Baseados no PDF) ---
+const SectionTitle = ({ subtitle, title }: { subtitle: string, title: string }) => (
+  <div className="mb-12">
+    <motion.span 
+      initial={{ opacity: 0, x: -20 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      className="text-emerald-400 font-mono text-sm tracking-wider uppercase mb-2 block"
+    >
+      {subtitle}
+    </motion.span>
+    <motion.h2 
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1 }}
+      className="text-3xl md:text-5xl font-bold text-white tracking-tight"
+    >
+      {title}
+    </motion.h2>
+  </div>
+);
+
+// --- DADOS REAIS DO CURRÍCULO ---
 
 const projects = [
   {
-    title: "FiberOptic Monitor",
-    desc: "Sistema de monitoramento de atenuação de sinal em redes FTTH. Utiliza Python para análise de dados de OTDR e gera relatórios automatizados.",
-    tags: ["Python", "Telecom", "Data Analysis"],
-    icon: ActivityIcon
+    title: "FiberOptic Sentinel",
+    desc: "Monitoramento em tempo real de redes FTTH usando Python. Analisa queda de sinal e gera alertas automáticos.",
+    tags: ["Python", "IoT", "Data"],
+    icon: Activity
   },
   {
-    title: "AutoConfig Switch",
-    desc: "Script de automação para configuração em massa de Switches e Roteadores via SSH, reduzindo o tempo de implantação em 70%.",
-    tags: ["Network Automation", "Bash", "Cisco CLI"],
+    title: "NetDeploy Auto",
+    desc: "Script de automação para configurar Switches Cisco/Huawei via SSH, reduzindo tempo de setup em 70%.",
+    tags: ["Bash", "Network", "Automation"],
     icon: Terminal
   },
   {
-    title: "ISP Manager UI",
-    desc: "Interface moderna para gestão de clientes de provedores locais, integrando dados de conexão e status financeiro.",
-    tags: ["React", "Node.js", "UI/UX"],
-    icon: Server
+    title: "ISP Manager Dashboard",
+    desc: "Interface moderna para técnicos de campo visualizarem status de conexão e ordens de serviço.",
+    tags: ["React", "Next.js", "UI/UX"],
+    icon: Layers
   }
 ];
 
 const skills = [
-  { name: "Redes de Fibra Óptica", level: 95, icon: Wifi },
-  { name: "Infraestrutura & Hardware", level: 90, icon: Cpu },
-  { name: "Configuração (Switch/Router)", level: 85, icon: Server },
-  { name: "Python & Automação", level: 75, icon: Code2 }, // Adicionado baseado no seu interesse
+  { name: "Fibra Óptica & FTTH", level: 95, icon: Wifi },
+  { name: "Infraestrutura de Redes", level: 90, icon: Server },
+  { name: "Python & Automação", level: 80, icon: Code2 },
+  { name: "Hardware & Manutenção", level: 85, icon: Cpu },
 ];
-
-function ActivityIcon({ className }: { className?: string }) {
-    return (
-        <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-    )
-}
 
 export default function Portfolio() {
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-slate-200 font-sans selection:bg-emerald-500/30">
+    <main className="relative min-h-screen bg-[#050505] text-slate-200 selection:bg-emerald-500/30 font-sans">
       
-      {/* --- HERO SECTION --- */}
-      <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background Glow */}
-        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-emerald-600/20 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px]" />
-
-        <div className="container mx-auto px-6 relative z-10 text-center md:text-left">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <span className="inline-block py-1 px-3 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium mb-6 tracking-wide">
-              DISPONÍVEL PARA CONTRATAÇÃO
-            </span>
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight leading-tight">
-              Olá, eu sou <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Victor Gomes</span>.
-            </h1>
-            <h2 className="text-2xl md:text-3xl text-slate-400 mb-8 font-light">
-              Técnico em Telecomunicações & <br className="md:hidden"/>Desenvolvedor de Soluções.
-            </h2>
-            <p className="text-lg text-slate-400 max-w-2xl mb-10 leading-relaxed md:mx-0 mx-auto">
-              Especialista em conectar o mundo físico ao digital. Combino expertise em 
-              <span className="text-slate-200"> Redes de Fibra Óptica</span> e 
-              <span className="text-slate-200"> Infraestrutura</span> com habilidades modernas de 
-              <span className="text-slate-200"> Desenvolvimento</span> para criar soluções robustas e eficientes.
-            </p>
+      {/* --- BACKGROUND FX --- */}
+      <div className="bg-noise fixed inset-0 z-[1]" />
+      <div className="fixed top-[-20%] left-[-10%] w-[600px] h-[600px] bg-emerald-600/20 rounded-full blur-[120px] blob" />
+      <div className="fixed bottom-[10%] right-[-5%] w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[120px] blob" style={{ animationDelay: "2s" }} />
+      
+      {/* --- CONTEÚDO PRINCIPAL (Z-INDEX ALTO PARA FICAR SOBRE O NOISE) --- */}
+      <div className="relative z-10">
+        
+        {/* HERO SECTION */}
+        <section className="min-h-screen flex items-center justify-center px-6 pt-20 relative">
+          <div className="max-w-7xl w-full grid md:grid-cols-2 gap-12 items-center">
             
-            <div className="flex flex-col md:flex-row gap-4 justify-center md:justify-start">
-              <button className="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-black font-bold rounded-lg transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
-                <Mail size={20} /> Contate-me
-              </button>
-              <button className="px-8 py-4 bg-slate-900 border border-slate-700 hover:border-slate-500 text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2">
-                <Download size={20} /> Baixar CV
-              </button>
-            </div>
-          </motion.div>
-        </div>
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 1, ease: "easeOut" }}
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-medium mb-6 backdrop-blur-md">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                OPEN TO WORK
+              </div>
+              
+              <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-[1.1]">
+                Olá, eu sou <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-200 to-cyan-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.3)]">
+                  ViictorN
+                </span>
+              </h1>
+              
+              <p className="text-lg text-slate-400 mb-8 max-w-xl leading-relaxed">
+                A fusão entre o mundo físico das <strong>Telecomunicações</strong> e a lógica do <strong>Desenvolvimento Moderno</strong>. Transformo cabos e códigos em soluções.
+              </p>
 
-        <motion.div 
-          animate={{ y: [0, 10, 0] }} 
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 text-slate-500"
-        >
-          <ChevronDown />
-        </motion.div>
-      </div>
+              <div className="flex flex-wrap gap-4">
+                <button className="group relative px-8 py-4 bg-emerald-500 text-black font-bold rounded-xl overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(16,185,129,0.4)]">
+                  <span className="relative z-10 flex items-center gap-2">
+                    <Mail size={18} /> Entrar em Contato
+                  </span>
+                  <div className="absolute inset-0 bg-white/20 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-300" />
+                </button>
+                
+                <button className="px-8 py-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md hover:bg-white/10 transition-all flex items-center gap-2 text-white">
+                  <Download size={18} /> Download CV
+                </button>
+              </div>
+            </motion.div>
 
-      {/* --- ABOUT SECTION --- */}
-      <Section className="grid md:grid-cols-2 gap-12 items-center">
-        <div>
-          <h3 className="text-emerald-400 font-medium mb-2">SOBRE MIM</h3>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Conectividade e Inovação Técnica</h2>
-          <div className="space-y-4 text-slate-400 leading-relaxed">
-            <p>
-              Com base em Bom Conselho - PE, sou um profissional focado na excelência técnica. 
-              Minha formação na Escola Técnica Estadual Francisco de Matos Sobrinho me deu as bases sólidas, 
-              mas minha curiosidade me levou além.
-            </p>
-            <p>
-              Tenho experiência prática em instalação e manutenção de redes (Fibra Óptica e Coaxial), 
-              mas meu diferencial está na visão sistêmica: entendo não apenas como passar o cabo, 
-              mas como os dados trafegam, como configurar os equipamentos (Cisco, Huawei, Mikrotik) 
-              e como otimizar a performance através de lógica e software.
-            </p>
+            {/* CARD FLUTUANTE 3D */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.2 }}
+              className="relative hidden md:block"
+            >
+              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/20 to-blue-500/20 rounded-3xl blur-2xl transform rotate-6" />
+              <GlassCard className="transform -rotate-3 border-emerald-500/20 bg-black/40">
+                <div className="flex justify-between items-start mb-8">
+                  <div className="flex gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500/50" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
+                    <div className="w-3 h-3 rounded-full bg-green-500/50" />
+                  </div>
+                  <Terminal className="text-slate-600" size={20} />
+                </div>
+                <div className="space-y-3 font-mono text-sm">
+                  <div className="flex gap-2">
+                    <span className="text-emerald-400">➜</span>
+                    <span className="text-purple-400">user</span>
+                    <span className="text-slate-500">@</span>
+                    <span className="text-blue-400">viictorn</span>
+                    <span className="text-white">:~#</span>
+                    <span className="text-yellow-300">init protocol</span>
+                  </div>
+                  <div className="text-slate-400 pl-4">> Establishing secure connection...</div>
+                  <div className="text-slate-400 pl-4">> Loading telecom modules... [OK]</div>
+                  <div className="text-slate-400 pl-4">> Loading dev skills... [OK]</div>
+                  <div className="text-emerald-400 pl-4">> System Ready.</div>
+                  <div className="w-3 h-5 bg-emerald-500 animate-pulse mt-2" />
+                </div>
+              </GlassCard>
+            </motion.div>
+
           </div>
           
-          <div className="mt-8 grid grid-cols-2 gap-4">
-            <div className="p-4 bg-slate-900 rounded-xl border border-slate-800">
-              <h4 className="text-2xl font-bold text-white mb-1">3+ Anos</h4>
-              <p className="text-sm text-slate-500">Estudos em Tecnologia</p>
-            </div>
-            <div className="p-4 bg-slate-900 rounded-xl border border-slate-800">
-              <h4 className="text-2xl font-bold text-white mb-1">100%</h4>
-              <p className="text-sm text-slate-500">Comprometimento</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="relative group">
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-blue-600 rounded-2xl blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" />
-          <div className="relative bg-slate-900 p-8 rounded-2xl border border-slate-800">
-            <h3 className="text-xl font-bold text-white mb-6">Stack Tecnológica</h3>
-            <div className="space-y-6">
-              {skills.map((skill) => (
-                <div key={skill.name}>
-                  <div className="flex justify-between mb-2">
-                    <span className="flex items-center gap-2 text-slate-300">
-                      <skill.icon size={16} className="text-emerald-400"/> {skill.name}
-                    </span>
-                    <span className="text-slate-500 text-sm">{skill.level}%</span>
+          <motion.div 
+            animate={{ y: [0, 10, 0] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+            className="absolute bottom-10 left-1/2 -translate-x-1/2 text-slate-600"
+          >
+            <ChevronDown />
+          </motion.div>
+        </section>
+
+        {/* SKILLS SECTION */}
+        <section className="py-32 px-6">
+          <div className="max-w-7xl mx-auto">
+            <SectionTitle subtitle="MINHA STACK" title="Habilidades Técnicas" />
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {skills.map((skill, i) => (
+                <GlassCard key={i} delay={i * 0.1} className="hover:border-emerald-500/30 group">
+                  <div className="w-12 h-12 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <skill.icon className="text-emerald-400" />
                   </div>
-                  <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                  <h3 className="text-xl font-bold text-white mb-2">{skill.name}</h3>
+                  <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       whileInView={{ width: `${skill.level}%` }}
-                      transition={{ duration: 1, delay: 0.2 }}
-                      className="h-full bg-emerald-500"
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500"
                     />
                   </div>
-                </div>
+                  <p className="text-right text-xs text-slate-500 mt-2">{skill.level}% Dominância</p>
+                </GlassCard>
               ))}
             </div>
           </div>
-        </div>
-      </Section>
+        </section>
 
-      {/* --- SERVICES / EXPERTISE --- */}
-      <Section>
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <h3 className="text-emerald-400 font-medium mb-2">O QUE EU FAÇO</h3>
-          <h2 className="text-3xl md:text-4xl font-bold text-white">Expertise Técnica</h2>
-        </div>
-        
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card 
-            title="Telecomunicações" 
-            desc="Instalação e manutenção de redes de fibra óptica, testes com OTDR e Power Meter, garantindo sinal limpo e estável."
-            icon={Wifi}
-          />
-          <Card 
-            title="Redes & Infra" 
-            desc="Configuração avançada de roteadores, switches e modems. Conhecimento em protocolos IP, cabeamento estruturado e LAN/WAN."
-            icon={Server}
-          />
-          <Card 
-            title="Suporte & Diagnóstico" 
-            desc="Resolução ágil de problemas (troubleshooting), interpretação de esquemas técnicos e suporte ao cliente com excelência."
-            icon={ActivityIcon}
-          />
-        </div>
-      </Section>
-
-      {/* --- PROJECTS (PORTFOLIO) --- */}
-      <Section className="bg-slate-900/30 rounded-3xl border border-white/5 my-20">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12">
-          <div>
-            <h3 className="text-emerald-400 font-medium mb-2">PORTFÓLIO</h3>
-            <h2 className="text-3xl md:text-4xl font-bold text-white">Projetos Selecionados</h2>
-          </div>
-          <button className="hidden md:flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
-            Ver GitHub <Github size={18} />
-          </button>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8">
-          {projects.map((project, index) => (
-            <Card 
-              key={index}
-              title={project.title}
-              desc={project.desc}
-              tags={project.tags}
-              icon={project.icon}
-            />
-          ))}
-        </div>
-      </Section>
-
-      {/* --- FORMATION TIMELINE (Curriculum Data) --- */}
-      <Section>
-        <h2 className="text-3xl font-bold text-white mb-12 text-center">Formação & Certificações</h2>
-        <div className="max-w-3xl mx-auto space-y-8 border-l-2 border-slate-800 pl-8 ml-4 md:ml-0">
-          
-          <div className="relative">
-            <span className="absolute -left-[41px] top-1 w-5 h-5 rounded-full bg-emerald-500 border-4 border-[#0a0a0a]" />
-            <div className="text-sm text-emerald-400 mb-1">2021 - 2023 (Concluído)</div>
-            <h3 className="text-xl font-bold text-white">Técnico em Redes de Computadores</h3>
-            <p className="text-slate-400">Escola Técnica Estadual Francisco de Matos Sobrinho</p>
-            <p className="text-slate-500 text-sm mt-2">Foco em infraestrutura de redes, protocolos e serviços, segurança de dados e telecomunicações.</p>
-          </div>
-
-          <div className="relative">
-            <span className="absolute -left-[41px] top-1 w-5 h-5 rounded-full bg-slate-700 border-4 border-[#0a0a0a]" />
-            <div className="text-sm text-slate-500 mb-1">Certificações Diversas</div>
-            <h3 className="text-xl font-bold text-white">Cursos Profissionalizantes</h3>
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4 text-slate-400 text-sm">
-              <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"/>Cabeamento Estruturado</li>
-              <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"/>Configuração de Roteadores/Switches</li>
-              <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"/>Fundamentos de Redes Ópticas</li>
-              <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"/>IoT e Automação</li>
-            </ul>
-          </div>
-
-        </div>
-      </Section>
-
-      {/* --- FOOTER / CONTACT --- */}
-      <footer className="border-t border-slate-800 bg-slate-900/50 mt-20 pt-20 pb-10">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold text-white mb-8">Vamos trabalhar juntos?</h2>
-          <div className="flex flex-col md:flex-row justify-center gap-8 mb-12">
-            <a href="mailto:victor140730@gmail.com" className="flex items-center justify-center gap-3 text-slate-400 hover:text-emerald-400 transition-colors">
-              <Mail size={20} /> victor140730@gmail.com
-            </a>
-            <a href="tel:+5587981641911" className="flex items-center justify-center gap-3 text-slate-400 hover:text-emerald-400 transition-colors">
-              <Phone size={20} /> (87) 98164-1911
-            </a>
-            <div className="flex items-center justify-center gap-3 text-slate-400">
-              <MapPin size={20} /> Bom Conselho - PE
+        {/* PROJECTS SECTION */}
+        <section className="py-32 px-6 bg-black/20">
+          <div className="max-w-7xl mx-auto">
+            <SectionTitle subtitle="PORTFÓLIO" title="Projetos Recentes" />
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              {projects.map((project, i) => (
+                <GlassCard key={i} delay={i * 0.2} className="group cursor-pointer">
+                  <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Zap className="text-emerald-400 fill-emerald-400/20" />
+                  </div>
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-black border border-white/10 flex items-center justify-center mb-6 shadow-lg group-hover:border-emerald-500/50 transition-colors">
+                    <project.icon className="text-slate-200" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-emerald-400 transition-colors">{project.title}</h3>
+                  <p className="text-slate-400 text-sm leading-relaxed mb-6">
+                    {project.desc}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {project.tags.map(tag => (
+                      <span key={tag} className="px-3 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/10 text-slate-300">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </GlassCard>
+              ))}
             </div>
           </div>
-          
-          <div className="flex justify-center gap-6 mb-8">
-            <a href="#" className="p-3 bg-slate-800 rounded-full hover:bg-emerald-500 hover:text-black transition-all"><Github size={20}/></a>
-            <a href="#" className="p-3 bg-slate-800 rounded-full hover:bg-blue-600 hover:text-white transition-all"><Linkedin size={20}/></a>
-          </div>
+        </section>
 
-          <p className="text-slate-600 text-sm">
-            © 2025 ViictorN. Todos os direitos reservados.
-          </p>
-        </div>
-      </footer>
+        {/* CONTACT / FOOTER */}
+        <footer className="py-20 px-6 border-t border-white/5 bg-black/40 backdrop-blur-lg">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl font-bold text-white mb-8">Vamos construir algo incrível?</h2>
+            <div className="flex flex-col md:flex-row justify-center gap-6 mb-12">
+              <GlassCard className="flex items-center gap-4 px-8 py-4">
+                <Mail className="text-emerald-400" />
+                <div className="text-left">
+                  <div className="text-xs text-slate-500">Email</div>
+                  <div className="text-white font-medium">victor140730@gmail.com</div>
+                </div>
+              </GlassCard>
+              
+              <GlassCard className="flex items-center gap-4 px-8 py-4">
+                <Phone className="text-emerald-400" />
+                <div className="text-left">
+                  <div className="text-xs text-slate-500">Telefone</div>
+                  <div className="text-white font-medium">(87) 98164-1911</div>
+                </div>
+              </GlassCard>
+            </div>
+            
+            <div className="flex justify-center gap-6">
+              <a href="#" className="text-slate-500 hover:text-white transition-colors"><Github /></a>
+              <a href="#" className="text-slate-500 hover:text-white transition-colors"><Linkedin /></a>
+            </div>
+            <p className="text-slate-600 text-sm mt-8">© 2025 ViictorN. Desenvolvido com Next.js & Tailwind.</p>
+          </div>
+        </footer>
+
+      </div>
     </main>
   );
 }
