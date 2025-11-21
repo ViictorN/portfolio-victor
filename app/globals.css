@@ -4,51 +4,68 @@
 
 :root {
   --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 0, 0, 0;
+  --background-start-rgb: 3, 3, 5;
   --background-end-rgb: 0, 0, 0;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: #050505;
+  background: #020203;
   overflow-x: hidden;
-  cursor: none; /* ESCONDE O MOUSE PADRÃO PARA USARMOS O CUSTOMIZADO */
+  cursor: none; /* Mouse customizado ativado */
 }
 
-/* Background Animado (Plasma Orbs) */
-.bg-orb {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(100px);
-  z-index: 0;
-  opacity: 0.4;
-  animation: float-orb 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, #10b981 0%, transparent 70%); }
-.orb-2 { bottom: -10%; right: -10%; width: 40vw; height: 40vw; background: radial-gradient(circle, #06b6d4 0%, transparent 70%); animation-delay: -5s; }
-.orb-3 { top: 40%; left: 40%; width: 30vw; height: 30vw; background: radial-gradient(circle, #3b82f6 0%, transparent 70%); animation-duration: 25s; }
-
-@keyframes float-orb {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(30px, 50px) scale(1.1); }
-  100% { transform: translate(-20px, -30px) scale(0.95); }
-}
-
-/* Grid Técnico Sutil sobre os orbes */
-.bg-grid-pattern {
+/* --- BACKGROUND AURORA MESH --- */
+.aurora-bg {
   position: fixed;
   inset: 0;
-  background-size: 60px 60px;
-  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
-  pointer-events: none;
   z-index: 0;
+  background: 
+    radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(56, 189, 248, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(236, 72, 153, 0.05) 0px, transparent 50%);
+  filter: blur(80px);
+  animation: aurora-move 20s infinite alternate;
 }
 
-/* Scrollbar moderna */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #000; }
+@keyframes aurora-move {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(1.1); opacity: 0.8; }
+}
+
+/* Grid em Perspectiva (Chão Digital) */
+.perspective-grid {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 200%; /* Mais largo para animação */
+  height: 50vh;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  transform: perspective(500px) rotateX(60deg) translateX(-25%);
+  mask-image: linear-gradient(to bottom, transparent, black);
+  pointer-events: none;
+  z-index: 0;
+  animation: grid-move 20s linear infinite;
+}
+
+@keyframes grid-move {
+  0% { transform: perspective(500px) rotateX(60deg) translateX(0); }
+  100% { transform: perspective(500px) rotateX(60deg) translateX(-50px); }
+}
+
+/* Utilitários de Vidro */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: #10b981; }

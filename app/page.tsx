@@ -1,19 +1,21 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, useMotionTemplate, useMotionValue, useSpring, AnimatePresence } from 'framer-motion';
+import { 
+  motion, useMotionTemplate, useMotionValue, useSpring, useTransform, AnimatePresence 
+} from 'framer-motion';
 import { 
   Wifi, Server, Code2, Cpu, Terminal, Mail, Phone, 
   Download, Github, Linkedin, ChevronDown, Activity, 
   Zap, Database, Globe, Lock, Network, ShieldCheck, 
-  Gauge, Menu, X, ArrowRight, Laptop, Smartphone
+  Gauge, Menu, X, ArrowUpRight, Laptop, Smartphone, Layers, MonitorPlay
 } from 'lucide-react';
 
-// --- 1. CURSOR LIQUID GLASS PERSONALIZADO ---
-function CustomCursor() {
+// --- 1. CURSOR MAGNÉTICO ---
+function MagneticCursor() {
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
-  const springConfig = { damping: 25, stiffness: 200 };
+  const springConfig = { damping: 20, stiffness: 300 }; // Mais rápido e "elástico"
   const cursorXSpring = useSpring(cursorX, springConfig);
   const cursorYSpring = useSpring(cursorY, springConfig);
   const [isHovering, setIsHovering] = useState(false);
@@ -22,99 +24,66 @@ function CustomCursor() {
     const moveCursor = (e: MouseEvent) => {
       cursorX.set(e.clientX - 16);
       cursorY.set(e.clientY - 16);
-      
-      // Verifica se está passando sobre algo clicável
       const target = e.target as HTMLElement;
-      setIsHovering(
+      // Detecta qualquer elemento interativo
+      const isInteractive = 
+        target.closest('button') || 
+        target.closest('a') || 
+        target.closest('input') || 
         target.tagName === 'BUTTON' || 
-        target.tagName === 'A' || 
-        target.tagName === 'INPUT' ||
-        target.closest('button') !== null ||
-        target.closest('a') !== null
-      );
+        target.tagName === 'A';
+      setIsHovering(!!isInteractive);
     };
     window.addEventListener('mousemove', moveCursor);
     return () => window.removeEventListener('mousemove', moveCursor);
   }, []);
 
   return (
-    <motion.div
-      className="fixed top-0 left-0 pointer-events-none z-[9999] hidden md:block"
-      style={{ x: cursorXSpring, y: cursorYSpring }}
-    >
-      {/* O Círculo "Liquid Glass" */}
+    <motion.div className="fixed top-0 left-0 pointer-events-none z-[9999] hidden md:block" style={{ x: cursorXSpring, y: cursorYSpring }}>
       <motion.div 
         animate={{ 
-          scale: isHovering ? 2.5 : 1,
-          backgroundColor: isHovering ? "rgba(16, 185, 129, 0.1)" : "rgba(255, 255, 255, 0.05)",
-          borderColor: isHovering ? "rgba(16, 185, 129, 0.5)" : "rgba(255, 255, 255, 0.2)"
+          scale: isHovering ? 3 : 1,
+          backgroundColor: isHovering ? "rgba(255, 255, 255, 0.1)" : "rgba(16, 185, 129, 0.5)",
+          borderColor: isHovering ? "rgba(255, 255, 255, 0.2)" : "transparent",
+          borderWidth: isHovering ? 1 : 0
         }}
-        className="w-8 h-8 rounded-full border backdrop-blur-[2px] flex items-center justify-center transition-colors duration-300"
+        className="w-4 h-4 rounded-full backdrop-blur-sm transition-all duration-200 flex items-center justify-center"
       >
-        <div className="w-1 h-1 bg-emerald-400 rounded-full" />
+        {!isHovering && <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />}
       </motion.div>
     </motion.div>
   );
 }
 
-// --- 2. MENU DE NAVEGAÇÃO (HAMBURGUER + DESKTOP) ---
-function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
+// --- 2. COMPONENTES UI (GLASS & TILT) ---
+
+// Card 3D que inclina com o mouse (Usado no Hero)
+function TiltCard({ children }: { children: React.ReactNode }) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const rotateX = useTransform(y, [-100, 100], [10, -10]); // Inverte eixo
+  const rotateY = useTransform(x, [-100, 100], [-10, 10]);
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 px-6 py-4">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        {/* Logo */}
-        <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md border border-white/10 px-4 py-2 rounded-full">
-          <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"/>
-          <span className="font-bold text-white tracking-tight">ViictorN</span>
-        </div>
-
-        {/* Desktop Menu */}
-        <div className="hidden md:flex gap-6 bg-black/40 backdrop-blur-md border border-white/10 px-6 py-2 rounded-full text-sm font-medium text-slate-300">
-          <a href="#hero" className="hover:text-emerald-400 transition-colors">Início</a>
-          <a href="#lab" className="hover:text-emerald-400 transition-colors">Ferramentas</a>
-          <a href="#skills" className="hover:text-emerald-400 transition-colors">Skills</a>
-          <a href="#projects" className="hover:text-emerald-400 transition-colors">Projetos</a>
-        </div>
-
-        {/* Mobile Hamburger Button */}
-        <button 
-          onClick={() => setIsOpen(true)}
-          className="md:hidden p-2 bg-black/40 backdrop-blur-md border border-white/10 rounded-full text-white"
-        >
-          <Menu size={24} />
-        </button>
-      </div>
-
-      {/* Mobile Fullscreen Menu Overlay */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 bg-black/95 backdrop-blur-xl z-[60] flex flex-col items-center justify-center gap-8"
-          >
-            <button onClick={() => setIsOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-white">
-              <X size={32} />
-            </button>
-            <nav className="flex flex-col items-center gap-6 text-2xl font-bold text-white">
-              <a onClick={() => setIsOpen(false)} href="#hero" className="hover:text-emerald-400">Início</a>
-              <a onClick={() => setIsOpen(false)} href="#lab" className="hover:text-emerald-400">Laboratório</a>
-              <a onClick={() => setIsOpen(false)} href="#skills" className="hover:text-emerald-400">Habilidades</a>
-              <a onClick={() => setIsOpen(false)} href="#projects" className="hover:text-emerald-400">Projetos</a>
-              <a onClick={() => setIsOpen(false)} href="mailto:victor140730@gmail.com" className="text-emerald-500 mt-4 text-lg font-medium">Fale Comigo</a>
-            </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </nav>
+    <motion.div 
+      style={{ rotateX, rotateY, perspective: 1000 }}
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        x.set((e.clientX - centerX) / 3); // Suavidade
+        y.set((e.clientY - centerY) / 3);
+      }}
+      onMouseLeave={() => { x.set(0); y.set(0); }}
+      className="relative z-10"
+    >
+      {children}
+    </motion.div>
   );
 }
 
-// --- COMPONENTES UI ---
-function SpotlightCard({ children, className = "", delay = 0 }: { children: React.ReactNode, className?: string, delay?: number }) {
+// Card com Liquid Glass + Spotlight
+function GlassCard({ children, className = "", delay = 0 }: { children: React.ReactNode, className?: string, delay?: number }) {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -126,376 +95,310 @@ function SpotlightCard({ children, className = "", delay = 0 }: { children: Reac
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.5, delay }}
+      transition={{ duration: 0.6, delay, ease: "easeOut" }}
       onMouseMove={handleMouseMove}
-      className={`group relative border border-white/10 bg-gray-900/20 overflow-hidden rounded-3xl ${className}`}
+      whileHover={{ scale: 1.02 }}
+      className={`group relative overflow-hidden rounded-3xl glass-panel ${className}`}
     >
       <motion.div
-        className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 transition duration-300 group-hover:opacity-100"
+        className="pointer-events-none absolute -inset-px opacity-0 transition duration-300 group-hover:opacity-100 z-0"
         style={{
           background: useMotionTemplate`
             radial-gradient(
-              500px circle at ${mouseX}px ${mouseY}px,
-              rgba(16, 185, 129, 0.10),
+              600px circle at ${mouseX}px ${mouseY}px,
+              rgba(255, 255, 255, 0.08),
               transparent 80%
             )
           `,
         }}
       />
-      <div className="relative h-full bg-black/20 backdrop-blur-lg p-6 rounded-3xl border border-white/5 flex flex-col">
-        {children}
-      </div>
+      <div className="relative z-10 h-full p-6">{children}</div>
     </motion.div>
   );
 }
 
-const InputField = ({ label, value, onChange, type = "number", suffix = "" }: any) => (
-  <div className="mb-4 w-full">
-    <label className="text-xs text-slate-400 mb-1.5 block ml-1">{label}</label>
-    <div className="relative group">
-      <input 
-        type={type} 
-        value={value} 
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
-      />
-      {suffix && <span className="absolute right-4 top-3 text-xs text-slate-500">{suffix}</span>}
-    </div>
-  </div>
-);
-
-// --- MINI FERRAMENTAS ---
-const FiberCalc = () => {
-  const [dist, setDist] = useState(10);
-  const [splices, setSplices] = useState(2);
-  const loss = (dist * 0.35) + (splices * 0.1) + (2 * 0.5); 
+// Navbar Glass
+function Navbar() {
+  const [isOpen, setIsOpen] = useState(false);
   return (
-    <div className="space-y-4 h-full flex flex-col">
-      <div className="flex items-center gap-2 text-emerald-400 mb-2">
-        <Activity size={18} /> <h4 className="font-bold text-white">Optical Loss Budget</h4>
-      </div>
-      <p className="text-xs text-slate-400 mb-4">Cálculo de atenuação em fibra.</p>
-      <div className="grid grid-cols-2 gap-3">
-        <InputField label="Km" value={dist} onChange={setDist} />
-        <InputField label="Emendas" value={splices} onChange={setSplices} />
-      </div>
-      <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex justify-between items-center mt-auto">
-        <span className="text-xs text-emerald-200">Total</span>
-        <span className="text-lg font-bold text-emerald-400">{loss.toFixed(2)} dB</span>
-      </div>
-    </div>
-  );
-};
+    <nav className="fixed top-6 left-0 w-full z-50 px-4 md:px-6">
+      <div className="max-w-5xl mx-auto flex justify-between items-center bg-black/30 backdrop-blur-xl border border-white/10 px-6 py-3 rounded-full shadow-2xl">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"/>
+          <span className="font-bold text-white tracking-wider text-sm">VIICTOR<span className="text-emerald-400">N</span></span>
+        </div>
 
-const DownloadCalc = () => {
-  const [size, setSize] = useState(50);
-  const [speed, setSpeed] = useState(300);
-  const time = (size * 8000) / speed;
-  const formattedTime = time < 60 ? `${time.toFixed(0)}s` : time < 3600 ? `${(time/60).toFixed(1)}m` : `${(time/3600).toFixed(1)}h`;
-  return (
-    <div className="space-y-4 h-full flex flex-col">
-      <div className="flex items-center gap-2 text-cyan-400 mb-2">
-        <Download size={18} /> <h4 className="font-bold text-white">Download Time</h4>
-      </div>
-      <p className="text-xs text-slate-400 mb-4">Estimativa de transferência.</p>
-      <div className="grid grid-cols-2 gap-3">
-        <InputField label="GB" value={size} onChange={setSize} />
-        <InputField label="Mbps" value={speed} onChange={setSpeed} />
-      </div>
-      <div className="bg-cyan-500/10 border border-cyan-500/20 p-3 rounded-xl flex justify-between items-center mt-auto">
-        <span className="text-xs text-cyan-200">Tempo</span>
-        <span className="text-lg font-bold text-cyan-400">{formattedTime}</span>
-      </div>
-    </div>
-  );
-};
+        <div className="hidden md:flex gap-8 text-xs font-medium text-slate-400 uppercase tracking-widest">
+          <a href="#skills" className="hover:text-white transition-colors">Habilidades</a>
+          <a href="#projects" className="hover:text-white transition-colors">Projetos</a>
+          <a href="#lab" className="hover:text-white transition-colors">Laboratório</a>
+        </div>
 
-const PowerConverter = () => {
-  const [dbm, setDbm] = useState(0);
-  const mw = Math.pow(10, dbm / 10);
-  return (
-    <div className="space-y-4 h-full flex flex-col">
-      <div className="flex items-center gap-2 text-purple-400 mb-2">
-        <Zap size={18} /> <h4 className="font-bold text-white">Conversor RF</h4>
-      </div>
-      <p className="text-xs text-slate-400 mb-4">dBm para mW.</p>
-      <InputField label="Potência (dBm)" value={dbm} onChange={setDbm} suffix="dBm" />
-      <div className="bg-purple-500/10 border border-purple-500/20 p-3 rounded-xl flex justify-between items-center mt-auto">
-        <span className="text-xs text-purple-200">Linear</span>
-        <span className="text-lg font-bold text-purple-400">{mw.toFixed(4)} mW</span>
-      </div>
-    </div>
-  );
-};
+        <div className="hidden md:block">
+           <a href="mailto:victor140730@gmail.com" className="px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white transition-all">Fale Comigo</a>
+        </div>
 
-const SubnetCalc = () => {
-  const [cidr, setCidr] = useState(24);
-  const hosts = Math.pow(2, 32 - cidr) - 2;
-  return (
-    <div className="space-y-4 h-full flex flex-col">
-      <div className="flex items-center gap-2 text-orange-400 mb-2">
-        <Network size={18} /> <h4 className="font-bold text-white">Calc. IPv4</h4>
+        <button onClick={() => setIsOpen(true)} className="md:hidden text-white"><Menu size={24} /></button>
       </div>
-      <p className="text-xs text-slate-400 mb-4">Hosts por CIDR.</p>
-      <div className="mb-4">
-        <label className="text-xs text-slate-400 mb-1.5 block">Máscara (/{cidr})</label>
-        <input type="range" min="16" max="30" value={cidr} onChange={(e) => setCidr(Number(e.target.value))} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500"/>
-      </div>
-      <div className="bg-orange-500/10 border border-orange-500/20 p-3 rounded-xl flex justify-between items-center mt-auto">
-        <span className="text-xs text-orange-200">Hosts</span>
-        <span className="text-lg font-bold text-orange-400">{hosts.toLocaleString()}</span>
-      </div>
-    </div>
-  );
-};
 
-const MacValidator = () => {
-  const [mac, setMac] = useState("");
-  const isValid = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/.test(mac);
-  return (
-    <div className="space-y-4 h-full flex flex-col">
-      <div className="flex items-center gap-2 text-rose-400 mb-2">
-        <ShieldCheck size={18} /> <h4 className="font-bold text-white">MAC Regex</h4>
-      </div>
-      <p className="text-xs text-slate-400 mb-4">Validador de endereço físico.</p>
-      <InputField label="Endereço MAC" value={mac} onChange={setMac} type="text" suffix={isValid ? "✓" : ""} />
-      <div className={`p-3 rounded-xl flex justify-between items-center border transition-colors mt-auto ${isValid ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-rose-500/10 border-rose-500/20'}`}>
-        <span className="text-xs text-slate-300">Status</span>
-        <span className={`text-sm font-bold ${isValid ? 'text-emerald-400' : 'text-rose-400'}`}>{mac.length === 0 ? "..." : isValid ? "VÁLIDO" : "INVÁLIDO"}</span>
-      </div>
-    </div>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/95 backdrop-blur-2xl z-[60] flex flex-col items-center justify-center gap-8">
+            <button onClick={() => setIsOpen(false)} className="absolute top-8 right-8 text-slate-400 hover:text-white"><X size={32} /></button>
+            <nav className="flex flex-col items-center gap-8 text-3xl font-bold text-white tracking-tight">
+              <a onClick={() => setIsOpen(false)} href="#skills">Habilidades</a>
+              <a onClick={() => setIsOpen(false)} href="#projects">Projetos</a>
+              <a onClick={() => setIsOpen(false)} href="#lab">Laboratório</a>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </nav>
   );
-};
-
-const PingSim = () => {
-  const [ping, setPing] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-  const runPing = async () => {
-    setLoading(true); setPing(null);
-    await new Promise(r => setTimeout(r, 800));
-    setPing(Math.floor(Math.random() * (80 - 10) + 10));
-    setLoading(false);
-  };
-  return (
-    <div className="space-y-4 h-full flex flex-col">
-      <div className="flex items-center gap-2 text-blue-400 mb-2">
-        <Gauge size={18} /> <h4 className="font-bold text-white">Ping Async</h4>
-      </div>
-      <p className="text-xs text-slate-400 mb-4">Teste de latência assíncrona.</p>
-      <button onClick={runPing} disabled={loading} className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 text-white text-sm font-medium transition-all mt-auto">
-        {loading ? "Enviando..." : "Testar Ping"}
-      </button>
-      {ping && (
-         <div className="mt-3 text-center text-blue-400 font-bold font-mono">{ping} ms</div>
-      )}
-    </div>
-  );
-};
+}
 
 // --- DADOS ---
-
 const skills = [
-  { name: "Fibra Óptica & FTTH", level: 98, icon: Wifi },
-  { name: "Redes & TCP/IP", level: 95, icon: Server },
-  { name: "Python & Scripting", level: 85, icon: Code2 },
-  { name: "Config. Hardware", level: 90, icon: Cpu },
-  { name: "Linux & Servers", level: 80, icon: Terminal },
-  { name: "Banco de Dados", level: 70, icon: Database },
-  { name: "React & Frontend", level: 75, icon: Zap },
-  { name: "Segurança de Redes", level: 85, icon: Lock },
+  { name: "Fibra Óptica", level: 98, icon: Wifi, color: "text-emerald-400" },
+  { name: "Redes TCP/IP", level: 95, icon: Server, color: "text-blue-400" },
+  { name: "Python", level: 85, icon: Code2, color: "text-yellow-400" },
+  { name: "Hardware", level: 90, icon: Cpu, color: "text-orange-400" },
+  { name: "Linux", level: 80, icon: Terminal, color: "text-purple-400" },
+  { name: "React/Next", level: 75, icon: Zap, color: "text-cyan-400" },
+  { name: "Database", level: 70, icon: Database, color: "text-pink-400" },
+  { name: "Security", level: 85, icon: Lock, color: "text-red-400" },
 ];
 
 const projects = [
   {
     title: "FiberOptic Sentinel",
-    desc: "Monitoramento de atenuação em tempo real via SNMP com alertas no Telegram.",
-    tags: ["Python", "SNMP", "Bot"],
+    desc: "Monitoramento IoT para redes FTTH. Coleta dados via SNMP e alerta técnicos.",
+    tags: ["Python", "IoT"],
     icon: Activity
   },
   {
     title: "AutoConfig Switch",
-    desc: "Provisionamento zero-touch de switches Cisco/Huawei, reduzindo setup em 70%.",
-    tags: ["Bash", "Cisco CLI"],
+    desc: "Automação de provisionamento para Cisco/Huawei. Reduz setup em 70%.",
+    tags: ["Bash", "Auto"],
     icon: Terminal
   },
   {
-    title: "ISP Manager UI",
-    desc: "Dashboard administrativo para provedores de internet visualizarem consumo.",
-    tags: ["Next.js", "Tailwind"],
+    title: "ISP Dashboard",
+    desc: "Painel de gestão para provedores visualizarem tráfego e clientes.",
+    tags: ["Next.js", "React"],
     icon: Globe
   },
   {
     title: "SecureNet VPN",
-    desc: "Servidor VPN WireGuard em Docker com autenticação 2FA para acesso remoto.",
-    tags: ["Docker", "Security"],
+    desc: "Infraestrutura VPN WireGuard com Docker e autenticação 2FA.",
+    tags: ["Security", "Docker"],
     icon: Lock
   },
   {
-    title: "Smart OLT Monitor",
-    desc: "Integração Zabbix para visualização gráfica de temperatura e tráfego de OLTs.",
+    title: "Smart OLT",
+    desc: "Monitoramento visual de temperatura e sinal óptico integrado ao Zabbix.",
     tags: ["Zabbix", "Monitoring"],
     icon: Gauge
   },
   {
     title: "Radius Auth",
-    desc: "Servidor FreeRADIUS para autenticação centralizada PPPoE.",
-    tags: ["Backend", "Database"],
+    desc: "Backend FreeRADIUS para autenticação PPPoE de alta performance.",
+    tags: ["Backend", "DB"],
     icon: Server
   }
 ];
 
-// --- PÁGINA PRINCIPAL ---
+// --- FERRAMENTAS (INPUTS COM GLASS) ---
+const GlassInput = ({ label, value, onChange, suffix }: any) => (
+  <div className="mb-3">
+    <label className="text-[10px] uppercase tracking-wider text-slate-400 mb-1 block ml-1">{label}</label>
+    <div className="relative">
+      <input 
+        type="number" value={value} onChange={(e) => onChange(e.target.value)}
+        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:bg-white/10 focus:border-emerald-500/50 transition-all"
+      />
+      {suffix && <span className="absolute right-3 top-2 text-xs text-slate-500">{suffix}</span>}
+    </div>
+  </div>
+);
+
+// Ferramentas simplificadas para caber no código
+const FiberCalc = () => {
+  const [val, setVal] = useState({ d: 10, s: 2 });
+  return (<div className="h-full flex flex-col"><h4 className="font-bold text-emerald-400 mb-2 flex items-center gap-2"><Activity size={16}/> Loss Budget</h4><GlassInput label="Km" value={val.d} onChange={(v:any)=>setVal({...val, d:v})} /><GlassInput label="Splices" value={val.s} onChange={(v:any)=>setVal({...val, s:v})} /><div className="mt-auto pt-2 border-t border-white/10 text-right font-mono text-xl text-white">{((val.d*0.35)+(val.s*0.1)+1).toFixed(2)} dB</div></div>);
+};
+const DownloadCalc = () => {
+  const [val, setVal] = useState({ s: 50, sp: 300 });
+  const t = (val.s*8000)/val.sp;
+  return (<div className="h-full flex flex-col"><h4 className="font-bold text-cyan-400 mb-2 flex items-center gap-2"><Download size={16}/> Time Est.</h4><GlassInput label="GB" value={val.s} onChange={(v:any)=>setVal({...val, s:v})} /><GlassInput label="Mbps" value={val.sp} onChange={(v:any)=>setVal({...val, sp:v})} /><div className="mt-auto pt-2 border-t border-white/10 text-right font-mono text-xl text-white">{t<60?t.toFixed(0)+'s':(t/60).toFixed(1)+'m'}</div></div>);
+};
+const SubnetCalc = () => {
+  const [cidr, setCidr] = useState(24);
+  return (<div className="h-full flex flex-col"><h4 className="font-bold text-orange-400 mb-2 flex items-center gap-2"><Network size={16}/> Subnet</h4><div className="mb-4"><label className="text-xs text-slate-400 block mb-2">Prefix: /{cidr}</label><input type="range" min="16" max="30" value={cidr} onChange={(e)=>setCidr(Number(e.target.value))} className="w-full accent-orange-500 h-1 bg-white/10 rounded-lg appearance-none"/></div><div className="mt-auto pt-2 border-t border-white/10 text-right font-mono text-xl text-white">{(Math.pow(2, 32-cidr)-2).toLocaleString()} hosts</div></div>);
+};
+
 export default function Portfolio() {
   return (
-    <main className="relative min-h-screen text-slate-200 font-sans selection:bg-emerald-500/30 overflow-x-hidden">
-      
-      <CustomCursor />
+    <main className="relative min-h-screen font-sans selection:bg-emerald-500/30">
+      <MagneticCursor />
       <Navbar />
-      
-      {/* Backgrounds Animados */}
-      <div className="fixed inset-0 z-0">
-        <div className="bg-orb orb-1" />
-        <div className="bg-orb orb-2" />
-        <div className="bg-orb orb-3" />
-        <div className="bg-grid-pattern" />
-      </div>
+
+      {/* BACKGROUNDS */}
+      <div className="aurora-bg" />
+      <div className="perspective-grid" />
       
       <div className="relative z-10 px-4 md:px-6">
         
-        {/* HERO SECTION */}
-        <section id="hero" className="min-h-screen flex flex-col justify-center items-center relative max-w-7xl mx-auto pt-20">
+        {/* --- HERO SECTION (REDESENHADA) --- */}
+        <section className="min-h-screen flex flex-col md:flex-row items-center justify-center gap-12 max-w-6xl mx-auto pt-20">
+          
+          {/* Lado Esquerdo: Tipografia Impactante */}
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }} 
-            animate={{ opacity: 1, scale: 1 }} 
-            transition={{ duration: 1 }}
-            className="text-center mb-12 md:mb-24 w-full"
+            initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1 }}
+            className="flex-1 text-center md:text-left"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md text-xs md:text-sm font-medium text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.2)] mb-8">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"/>
-              Fullstack Network Technician
+            <div className="inline-block px-3 py-1 mb-6 border border-emerald-500/30 bg-emerald-500/10 rounded-full">
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-[0.2em]">Open to Work</span>
             </div>
-            <h1 className="text-5xl sm:text-6xl md:text-8xl font-bold text-white tracking-tight mb-6 leading-tight">
-              Viictor<span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">N</span>
+            <h1 className="text-6xl md:text-8xl font-black text-white leading-[0.9] tracking-tighter mb-6">
+              HYBRID<br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-500 to-white">TECH</span>NICIAN.
             </h1>
-            <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed px-4">
-              Conectando o mundo físico das <strong>Telecomunicações</strong> com a inteligência do <strong>Desenvolvimento Moderno</strong>.
+            <p className="text-lg text-slate-400 max-w-md leading-relaxed mb-8 mx-auto md:mx-0">
+              A ponte definitiva entre a infraestrutura física de <strong>Telecom</strong> e a inteligência do <strong>Software</strong>.
             </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-10 w-full px-4">
-              <button className="w-full sm:w-auto px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-full transition-all hover:scale-105 shadow-[0_0_30px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2">
-                <Mail size={18}/> Entrar em Contato
-              </button>
-              <button className="w-full sm:w-auto px-8 py-4 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-medium rounded-full backdrop-blur-md transition-all flex items-center justify-center gap-2">
-                <Download size={18}/> Baixar CV
-              </button>
+            <div className="flex gap-4 justify-center md:justify-start">
+              <button className="px-8 py-4 rounded-2xl bg-emerald-500 text-black font-bold hover:scale-105 transition-transform">Projetos</button>
+              <button className="px-8 py-4 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md hover:bg-white/10 transition-colors">Contato</button>
             </div>
           </motion.div>
 
-          <div className="absolute bottom-10 animate-bounce text-slate-500 hidden md:block">
-            <ChevronDown />
-          </div>
-        </section>
-
-        {/* LAB SECTION */}
-        <section id="lab" className="py-20 max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-12 px-2">
-            <div>
-              <div className="text-emerald-400 font-mono text-sm tracking-wider uppercase mb-2">Live Demo</div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white">Laboratório Interativo</h2>
-            </div>
-            <div className="hidden md:flex items-center gap-2 text-slate-500 text-sm mt-4 md:mt-0">
-              <Terminal size={16} /> Ferramentas funcionais
-            </div>
-          </div>
-          
-          {/* Grid Responsivo: 1 col mobile, 2 tablet, 3 desktop */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            <SpotlightCard delay={0.1}><FiberCalc /></SpotlightCard>
-            <SpotlightCard delay={0.2}><DownloadCalc /></SpotlightCard>
-            <SpotlightCard delay={0.3}><SubnetCalc /></SpotlightCard>
-            <SpotlightCard delay={0.4}><PowerConverter /></SpotlightCard>
-            <SpotlightCard delay={0.5}><PingSim /></SpotlightCard>
-            <SpotlightCard delay={0.6}><MacValidator /></SpotlightCard>
-          </div>
-        </section>
-
-        {/* SKILLS SECTION */}
-        <section id="skills" className="py-20 max-w-7xl mx-auto">
-          <div className="text-center mb-16 px-2">
-             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Dominância Técnica</h2>
-             <p className="text-slate-400">Stack completa: do Cabo ao Código.</p>
-          </div>
-          
-          {/* Grid Responsivo */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
-            {skills.map((skill, i) => (
-              <SpotlightCard key={i} delay={i * 0.1} className="flex flex-col items-center justify-center text-center p-4 md:p-6 h-full">
-                <div className="p-3 md:p-4 rounded-full bg-white/5 mb-3 md:mb-4 ring-1 ring-white/10 group-hover:bg-emerald-500/20 transition-colors">
-                  <skill.icon size={20} className="text-emerald-400 md:w-6 md:h-6" />
+          {/* Lado Direito: Tilt Card 3D "ID Holográfico" */}
+          <div className="flex-1 w-full max-w-sm hidden md:block">
+            <TiltCard>
+              <div className="glass-panel rounded-[30px] p-8 relative overflow-hidden aspect-[3/4] flex flex-col justify-between border-t border-l border-white/20 shadow-2xl">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/30 blur-[60px] rounded-full" />
+                
+                <div className="flex justify-between items-start">
+                  <Cpu size={32} className="text-white/80" />
+                  <div className="text-right">
+                    <div className="text-[10px] text-slate-400 uppercase tracking-widest">ID REF</div>
+                    <div className="font-mono text-emerald-400">VN-87PE</div>
+                  </div>
                 </div>
-                <h3 className="font-bold text-white mb-2 text-xs md:text-sm">{skill.name}</h3>
-                <div className="w-full bg-slate-800 h-1 rounded-full overflow-hidden mt-2">
+
+                <div className="space-y-6">
+                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-slate-700 to-black border border-white/10 mx-auto flex items-center justify-center">
+                     <span className="text-4xl">VN</span>
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold text-white">ViictorN</h3>
+                    <p className="text-sm text-emerald-400 font-mono mt-1">Fullstack Tech</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-3 bg-white/5 rounded-xl text-center border border-white/5">
+                    <div className="text-slate-400 mb-1">LEVEL</div>
+                    <div className="text-white font-bold">SENIOR</div>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-xl text-center border border-white/5">
+                    <div className="text-slate-400 mb-1">STATUS</div>
+                    <div className="text-emerald-400 font-bold animate-pulse">ONLINE</div>
+                  </div>
+                </div>
+              </div>
+            </TiltCard>
+          </div>
+        </section>
+
+        {/* --- SECTION 1: HABILIDADES (HIERARQUIA REQUISITADA) --- */}
+        <section id="skills" className="py-20 max-w-6xl mx-auto">
+          <div className="mb-12 flex items-end gap-4">
+             <h2 className="text-4xl md:text-5xl font-bold text-white">Dominância<br/><span className="text-slate-600">Técnica.</span></h2>
+             <div className="h-px flex-1 bg-gradient-to-r from-white/20 to-transparent mb-4" />
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {skills.map((skill, i) => (
+              <GlassCard key={i} delay={i * 0.05} className="hover:border-emerald-500/30 transition-colors flex flex-col items-center justify-center text-center py-8">
+                <skill.icon size={32} className={`${skill.color} mb-4`} />
+                <h3 className="text-white font-bold mb-2">{skill.name}</h3>
+                <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden mt-2">
                   <motion.div 
-                    initial={{ width: 0 }}
-                    whileInView={{ width: `${skill.level}%` }}
-                    transition={{ duration: 1.5 }}
-                    className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                    initial={{ width: 0 }} whileInView={{ width: `${skill.level}%` }} transition={{ duration: 1 }}
+                    className={`h-full bg-current ${skill.color}`} 
                   />
                 </div>
-                <span className="text-[10px] md:text-xs text-slate-500 mt-2">{skill.level}%</span>
-              </SpotlightCard>
+              </GlassCard>
             ))}
           </div>
         </section>
 
-        {/* PROJECTS SECTION */}
-        <section id="projects" className="py-20 max-w-7xl mx-auto pb-40">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-12 px-2">Projetos em Destaque</h2>
+        {/* --- SECTION 2: PROJETOS --- */}
+        <section id="projects" className="py-20 max-w-6xl mx-auto">
+           <div className="mb-12 flex items-end gap-4">
+             <h2 className="text-4xl md:text-5xl font-bold text-white">Projetos<br/><span className="text-slate-600">Recentes.</span></h2>
+             <div className="h-px flex-1 bg-gradient-to-r from-white/20 to-transparent mb-4" />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project, i) => (
-              <SpotlightCard key={i} delay={i * 0.15}>
+              <GlassCard key={i} delay={i * 0.1}>
                 <div className="flex justify-between items-start mb-6">
-                  <div className="p-3 bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 rounded-xl border border-white/10">
-                    <project.icon className="text-emerald-400" size={24} />
+                  <div className="p-3 bg-white/5 rounded-xl border border-white/10 text-emerald-400">
+                    <project.icon size={20} />
                   </div>
-                  <ArrowRight className="text-slate-600 -rotate-45 group-hover:text-white group-hover:rotate-0 transition-all" />
+                  <div className="px-2 py-1 rounded text-[10px] font-bold bg-white/5 text-slate-400 border border-white/5">2025</div>
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">{project.title}</h3>
-                <p className="text-slate-400 text-sm leading-relaxed mb-6 line-clamp-3">
-                  {project.desc}
-                </p>
+                <p className="text-slate-400 text-sm leading-relaxed mb-6 line-clamp-2">{project.desc}</p>
                 <div className="flex flex-wrap gap-2 mt-auto">
                   {project.tags.map(tag => (
-                    <span key={tag} className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] md:text-xs text-slate-300 font-mono">
-                      {tag}
-                    </span>
+                    <span key={tag} className="text-[10px] px-2 py-1 rounded-md bg-white/5 text-slate-300 border border-white/5">{tag}</span>
                   ))}
                 </div>
-              </SpotlightCard>
+              </GlassCard>
             ))}
           </div>
         </section>
 
-        {/* FOOTER */}
-        <footer className="border-t border-white/10 bg-black/40 backdrop-blur-xl py-12 text-center relative z-20">
-          <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="text-left">
-              <h3 className="text-xl font-bold text-white">ViictorN</h3>
-              <p className="text-slate-500 text-sm">Bom Conselho - PE</p>
+        {/* --- SECTION 3: LABORATÓRIO (MOVIDO PARA O FIM) --- */}
+        <section id="lab" className="py-20 max-w-6xl mx-auto pb-40">
+          <div className="glass-panel rounded-[40px] p-8 md:p-12 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500" />
+            
+            <div className="mb-12 text-center">
+               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-emerald-400 text-xs font-bold tracking-widest uppercase mb-4">
+                 <MonitorPlay size={12} /> Interactive Area
+               </div>
+               <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Laboratório de Testes</h2>
+               <p className="text-slate-400 max-w-xl mx-auto">Ferramentas funcionais desenvolvidas para demonstrar lógica de programação aplicada a telecomunicações.</p>
             </div>
-            <div className="flex flex-col md:flex-row gap-4 md:gap-6 text-sm">
-              <a href="mailto:victor140730@gmail.com" className="text-slate-400 hover:text-emerald-400 transition-colors flex items-center justify-center gap-2">
-                <Mail size={16}/> victor140730@gmail.com
-              </a>
-              <span className="hidden md:inline text-slate-700">|</span>
-              <span className="text-slate-400 flex items-center justify-center gap-2">
-                <Phone size={16}/> (87) 98164-1911
-              </span>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <GlassCard className="bg-black/40"><FiberCalc /></GlassCard>
+              <GlassCard className="bg-black/40"><DownloadCalc /></GlassCard>
+              <GlassCard className="bg-black/40"><SubnetCalc /></GlassCard>
             </div>
-            <p className="text-slate-600 text-xs md:text-sm">© 2025. ViictorN.</p>
+          </div>
+        </section>
+
+        {/* --- FOOTER --- */}
+        <footer className="border-t border-white/10 py-12 bg-black text-center relative z-10">
+          <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center opacity-60 hover:opacity-100 transition-opacity">
+             <div className="text-left">
+               <h4 className="font-bold text-white">ViictorN</h4>
+               <p className="text-xs text-slate-500">Pernambuco, Brasil.</p>
+             </div>
+             <div className="flex gap-6 text-sm mt-4 md:mt-0">
+               <a href="#" className="hover:text-emerald-400">Email</a>
+               <a href="#" className="hover:text-emerald-400">LinkedIn</a>
+               <a href="#" className="hover:text-emerald-400">GitHub</a>
+             </div>
           </div>
         </footer>
 
